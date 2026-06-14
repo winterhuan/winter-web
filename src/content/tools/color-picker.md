@@ -1,0 +1,26 @@
+---
+title: '调色板生成器'
+description: '从一个基础色出发，自动生成完整的配色方案，支持导出为 CSS 变量。'
+date: 2026-06-10
+tags: ['设计', 'CSS']
+url: 'https://example.com/color-picker'
+repo: 'https://github.com/'
+---
+
+输入一个主色，自动生成 50–900 的完整色阶，并支持导出。
+
+## 为什么做这个
+
+每次做新项目都要手动调色，太麻烦。这个工具用 HSL 色彩空间插值，几秒钟就能得到一套和谐的配色。
+
+## 导出格式
+
+```css
+:root {
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  /* ... */
+}
+```
+
+直接复制到项目里就能用。

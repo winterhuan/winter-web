@@ -1,0 +1,63 @@
+---
+// 深/浅色切换按钮
+// 逻辑：跟随系统偏好，点击后用 localStorage 覆盖；
+// 内联脚本在 HTML 头部提前运行，避免主题闪烁（FOUC）
+---
+<button
+  id="theme-toggle"
+  type="button"
+  aria-label="切换深色/浅色模式"
+  title="切换主题"
+  class="theme-toggle"
+>
+  <span class="icon icon-sun">☀</span>
+  <span class="icon icon-moon">☾</span>
+</button>
+
+<style>
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+  }
+  .theme-toggle:hover {
+    border-color: var(--color-border-strong);
+  }
+  .icon {
+    font-size: 1rem;
+    line-height: 1;
+  }
+  /* 默认（浅色）显示月亮（点击切到深色）；深色模式显示太阳 */
+  .icon-moon { display: inline; }
+  .icon-sun { display: none; }
+  :global(:root[data-theme='dark']) .icon-moon { display: none; }
+  :global(:root[data-theme='dark']) .icon-sun { display: inline; }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme])) .icon-moon { display: none; }
+    :global(:root:not([data-theme])) .icon-sun { display: inline; }
+    :global(:root[data-theme='light']) .icon-moon { display: inline; }
+    :global(:root[data-theme='light']) .icon-sun { display: none; }
+  }
+</style>
+
+<script is:inline>
+  // 切换逻辑
+  document.getElementById('theme-toggle')?.addEventListener('click', () => {
+    const root = document.documentElement;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const currentIsDark = root.dataset.theme
+      ? root.dataset.theme === 'dark'
+      : prefersDark;
+    const next = currentIsDark ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try { localStorage.setItem('theme', next); } catch (e) {}
+  });
+</script>

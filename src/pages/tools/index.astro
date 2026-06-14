@@ -1,0 +1,46 @@
+---
+import Base from '../../layouts/Base.astro';
+import Card from '../../components/Card.astro';
+import { getPublished } from '../../lib/content';
+
+const entries = await getPublished('tools');
+---
+<Base title="工具" description="Winter 做的小工具 —— 开箱即用的在线工具。">
+  <section class="section">
+    <div class="container">
+      <header class="page-head">
+        <h1>工具</h1>
+        <p class="lead">做的一些小工具，开箱即用。</p>
+      </header>
+
+      {entries.length > 0 ? (
+        <div class="grid">
+          {entries.map((entry) => <Card entry={entry} />)}
+        </div>
+      ) : (
+        <p class="muted empty">还没有工具。</p>
+      )}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head {
+    margin-bottom: var(--space-12);
+    padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .page-head h1 { font-size: var(--font-size-3xl); }
+  .page-head .lead { margin-top: var(--space-2); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-4);
+  }
+  .empty {
+    padding: var(--space-8);
+    text-align: center;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+</style>

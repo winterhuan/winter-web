@@ -1,0 +1,52 @@
+---
+// 产品详情页 —— /products/[...slug]
+import { getCollection, render } from 'astro:content';
+import Article from '../../layouts/Article.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('products', ({ data }) => data.draft !== true);
+  return entries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { data } = entry;
+---
+<Article
+  title={data.title}
+  description={data.description}
+  date={data.date}
+  tags={data.tags}
+  backHref="/products"
+  backLabel="返回产品"
+>
+  {(data.status || data.url || data.repo) && (
+    <p class="entry-actions">
+      {data.status && <span class="status-tag">状态：{data.status}</span>}
+      {data.url && <a class="btn" href={data.url} target="_blank" rel="noopener">访问产品 →</a>}
+      {data.repo && <a class="btn btn-ghost" href={data.repo} target="_blank" rel="noopener">查看源码</a>}
+    </p>
+  )}
+  <Content />
+</Article>
+
+<style>
+  .entry-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+  }
+  .status-tag {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-mute);
+    padding: 2px var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+  }
+</style>

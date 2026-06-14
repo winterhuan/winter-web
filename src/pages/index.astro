@@ -1,0 +1,85 @@
+---
+import Base from '../layouts/Base.astro';
+import Card from '../components/Card.astro';
+import { AUTHOR } from '../consts';
+import { getLatest } from '../lib/content';
+
+// 取每类最新的前 3 条
+const [blog, tools, products] = await Promise.all([
+  getLatest('blog', 3),
+  getLatest('tools', 3),
+  getLatest('products', 3),
+]);
+
+const sections = [
+  { href: '/blog', label: '博客', entries: blog },
+  { href: '/tools', label: '工具', entries: tools },
+  { href: '/products', label: '产品', entries: products },
+];
+---
+<Base>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero-name">{AUTHOR.name}<span class="dot">.</span></h1>
+      <p class="hero-tagline">{AUTHOR.tagline}</p>
+      <p class="hero-bio">{AUTHOR.bio}</p>
+    </div>
+  </section>
+
+  <!-- 三类最新内容 -->
+  <div class="container">
+    {sections.map((section) => (
+      <section class="section list-section">
+        <div class="section-head">
+          <h2>{section.label}</h2>
+          <a href={section.href} class="link-underline">查看全部 →</a>
+        </div>
+        {section.entries.length > 0 ? (
+          <div class="grid">
+            {section.entries.map((entry) => <Card entry={entry} />)}
+          </div>
+        ) : (
+          <p class="muted empty">还没有内容。</p>
+        )}
+      </section>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .hero {
+    padding-block: var(--space-24) var(--space-16);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .hero-name {
+    font-size: var(--font-size-4xl);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .dot { color: var(--color-text-mute); }
+  .hero-tagline {
+    font-size: var(--font-size-xl);
+    color: var(--color-text);
+    margin-top: var(--space-4);
+    max-width: 40ch;
+  }
+  .hero-bio {
+    margin-top: var(--space-3);
+    max-width: 52ch;
+    font-size: var(--font-size-base);
+  }
+  .list-section + .list-section { padding-top: 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-4);
+  }
+  .empty {
+    padding: var(--space-8);
+    text-align: center;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+</style>

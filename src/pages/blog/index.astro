@@ -1,0 +1,46 @@
+---
+import Base from '../../layouts/Base.astro';
+import Card from '../../components/Card.astro';
+import { getPublished } from '../../lib/content';
+
+const entries = await getPublished('blog');
+---
+<Base title="博客" description="Winter 的博客文章 —— 思考、笔记与记录。">
+  <section class="section">
+    <div class="container container-narrow">
+      <header class="page-head">
+        <h1>博客</h1>
+        <p class="lead">思考、笔记与记录。</p>
+      </header>
+
+      {entries.length > 0 ? (
+        <div class="list">
+          {entries.map((entry) => <Card entry={entry} />)}
+        </div>
+      ) : (
+        <p class="muted empty">还没有文章。</p>
+      )}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head {
+    margin-bottom: var(--space-12);
+    padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .page-head h1 { font-size: var(--font-size-3xl); }
+  .page-head .lead { margin-top: var(--space-2); }
+  .list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  .empty {
+    padding: var(--space-8);
+    text-align: center;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+</style>

@@ -1,0 +1,97 @@
+---
+// 列表卡片 —— 博客/工具/产品三类内容共用
+// 根据 entry 的集合类型决定是「外链卡」还是「详情页卡」
+import FormattedDate from './FormattedDate.astro';
+
+interface CardEntry {
+  collection: 'blog' | 'tools' | 'products';
+  slug: string;
+  data: {
+    title: string;
+    description?: string;
+    date: Date;
+    tags?: string[];
+    url?: string;       // 外部试用链接（工具/产品）
+    repo?: string;      // 源码仓库
+    status?: string;    // 产品状态（如 beta/live）
+  };
+}
+
+interface Props {
+  entry: CardEntry;
+}
+const { entry } = Astro.props;
+const { collection, slug, data } = entry;
+
+// 有外部 url 的（工具/产品）整卡跳外链；否则跳详情页
+const isExternal = Boolean(data.url);
+const href = isExternal
+  ? data.url!
+  : `/${collection === 'blog' ? 'blog' : collection}/${slug}`;
+---
+<article class="card">
+  <a href={href} class="card-link" {...(isExternal ? { target: '_blank', rel: 'noopener' } : {})}>
+    <div class="card-meta">
+      <FormattedDate date={data.date} />
+      {data.status && <span class="status">{data.status}</span>}
+    </div>
+    <h3 class="card-title">{data.title}</h3>
+    {data.description && <p class="card-desc">{data.description}</p>}
+    {(data.tags?.length || data.repo) && (
+      <div class="card-foot">
+        {data.tags?.map((t) => <span class="tag">{t}</span>)}
+        {data.repo && <span class="repo muted">↗ 源码</span>}
+      </div>
+    )}
+  </a>
+</article>
+
+<style>
+  .card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    transition: border-color var(--transition), transform var(--transition);
+  }
+  .card:hover {
+    border-color: var(--color-border-strong);
+    transform: translateY(-2px);
+  }
+  .card-link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    height: 100%;
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+  }
+  .status {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text);
+  }
+  .card-title {
+    font-size: var(--font-size-lg);
+    line-height: 1.3;
+  }
+  .card-desc {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-soft);
+    flex: 1;
+  }
+  .card-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: auto;
+  }
+  .repo { font-size: var(--font-size-xs); }
+</style>

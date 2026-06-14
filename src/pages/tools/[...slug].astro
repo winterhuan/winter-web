@@ -1,0 +1,42 @@
+---
+// 工具详情页 —— /tools/[...slug]
+import { getCollection, render } from 'astro:content';
+import Article from '../../layouts/Article.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('tools', ({ data }) => data.draft !== true);
+  return entries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { data } = entry;
+---
+<Article
+  title={data.title}
+  description={data.description}
+  date={data.date}
+  tags={data.tags}
+  backHref="/tools"
+  backLabel="返回工具"
+>
+  {(data.url || data.repo) && (
+    <p class="entry-actions">
+      {data.url && <a class="btn" href={data.url} target="_blank" rel="noopener">在线试用 →</a>}
+      {data.repo && <a class="btn btn-ghost" href={data.repo} target="_blank" rel="noopener">查看源码</a>}
+    </p>
+  )}
+  <Content />
+</Article>
+
+<style>
+  .entry-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+  }
+</style>
