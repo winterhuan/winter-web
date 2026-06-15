@@ -1,0 +1,17 @@
+---
+// 博客标签筛选页 —— /blog/tags/[tag]
+import { getAllTags, getByTag } from '../../../lib/content';
+import TagPage from '../../../layouts/TagPage.astro';
+
+export async function getStaticPaths() {
+  const tags = await getAllTags('blog');
+  return tags.map(({ tag }) => ({
+    params: { tag },
+    props: { tag },
+  }));
+}
+
+const { tag } = Astro.props;
+const entries = await getByTag('blog', tag);
+---
+<TagPage collection="blog" label="博客" tag={tag} entries={entries} />

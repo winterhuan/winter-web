@@ -1,9 +1,11 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Card from '../../components/Card.astro';
-import { getPublished } from '../../lib/content';
+import TagCloud from '../../components/TagCloud.astro';
+import { getPublished, getAllTags } from '../../lib/content';
 
 const entries = await getPublished('tools');
+const tags = await getAllTags('tools');
 ---
 <Base title="工具" description="Winter 做的小工具 —— 开箱即用的在线工具。">
   <section class="section">
@@ -12,6 +14,8 @@ const entries = await getPublished('tools');
         <h1>工具</h1>
         <p class="lead">做的一些小工具，开箱即用。</p>
       </header>
+
+      <TagCloud collection="tools" tags={tags} />
 
       {entries.length > 0 ? (
         <div class="grid">
@@ -26,7 +30,7 @@ const entries = await getPublished('tools');
 
 <style>
   .page-head {
-    margin-bottom: var(--space-12);
+    margin-bottom: var(--space-8);
     padding-bottom: var(--space-6);
     border-bottom: 1px solid var(--color-border);
   }

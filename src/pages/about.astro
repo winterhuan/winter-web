@@ -1,0 +1,41 @@
+---
+import Base from '../layouts/Base.astro';
+import Article from '../layouts/Article.astro';
+import { AUTHOR, ABOUT, SOCIAL_LINKS } from '../consts';
+
+const externalSocial = SOCIAL_LINKS.filter((l) => !l.href.startsWith('/'));
+---
+<Base title="关于" description={`关于 ${AUTHOR.name}`}>
+  <Article title={`关于 ${AUTHOR.name}`} description={AUTHOR.bio}>
+    <p>{AUTHOR.bio}</p>
+
+    <h2>现在</h2>
+    <p>{ABOUT.now}</p>
+
+    <h2>感兴趣的方向</h2>
+    <ul class="interests">
+      {ABOUT.interests.map((item) => <li><span class="tag">{item}</span></li>)}
+    </ul>
+
+    <h2>联系</h2>
+    <p>
+      邮箱：<a href={`mailto:${ABOUT.email}`}>{ABOUT.email}</a><br />
+      {externalSocial.length > 0 && (
+        <>也可以在这些地方找到我：
+          {externalSocial.map((link, i) => (
+            <>{i > 0 && '、'}<a href={link.href} target="_blank" rel="noopener">{link.label}</a></>
+          ))}。</>
+      )}
+    </p>
+  </Article>
+</Base>
+
+<style>
+  .interests {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+</style>

@@ -1,0 +1,17 @@
+---
+// 产品标签筛选页 —— /products/tags/[tag]
+import { getAllTags, getByTag } from '../../../lib/content';
+import TagPage from '../../../layouts/TagPage.astro';
+
+export async function getStaticPaths() {
+  const tags = await getAllTags('products');
+  return tags.map(({ tag }) => ({
+    params: { tag },
+    props: { tag },
+  }));
+}
+
+const { tag } = Astro.props;
+const entries = await getByTag('products', tag);
+---
+<TagPage collection="products" label="产品" tag={tag} entries={entries} />

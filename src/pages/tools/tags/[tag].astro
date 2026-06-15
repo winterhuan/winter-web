@@ -1,0 +1,17 @@
+---
+// 工具标签筛选页 —— /tools/tags/[tag]
+import { getAllTags, getByTag } from '../../../lib/content';
+import TagPage from '../../../layouts/TagPage.astro';
+
+export async function getStaticPaths() {
+  const tags = await getAllTags('tools');
+  return tags.map(({ tag }) => ({
+    params: { tag },
+    props: { tag },
+  }));
+}
+
+const { tag } = Astro.props;
+const entries = await getByTag('tools', tag);
+---
+<TagPage collection="tools" label="工具" tag={tag} entries={entries} />

@@ -1,13 +1,22 @@
 ---
 // 文章详情布局 —— 博客/工具/产品详情页共用
+// 支持：阅读时长、可点击标签、右侧 TOC（桌面端）
 import Base from './Base.astro';
 import FormattedDate from '../components/FormattedDate.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import { readingTime } from '../lib/reading-time';
 
 interface Props {
   title: string;
   description?: string;
   date?: Date;
   tags?: string[];
+  /** 集合名 —— 决定标签链接前缀 */
+  collection?: 'blog' | 'tools' | 'products';
+  /** 原始正文，用于计算阅读时长 */
+  body?: string;
+  /** 标题数据，用于 TOC */
+  headings?: { depth: number; slug: string; text: string }[];
   /** 是否显示返回链接 */
   backHref?: string;
   backLabel?: string;
@@ -18,13 +27,24 @@ const {
   description,
   date,
   tags = [],
+  collection,
+  body,
+  headings = [],
   backHref,
   backLabel = '返回列表',
 } = Astro.props;
+
+const minutes = body ? readingTime(body) : 0;
+// 标签跳转到对应集合的标签页
+const tagHref = (t: string) =>
+  collection ? `/${collection}/tags/${encodeURIComponent(t)}` : undefined;
+// TOC 只取 h2/h3，至少 3 个才显示
+const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const showToc = tocHeadings.length >= 3;
 ---
 <Base title={title} description={description}>
   <article class="section">
-    <div class="container container-narrow">
+    <div class="container">
       {backHref && (
         <a href={backHref} class="back link-underline muted">← {backLabel}</a>
       )}
@@ -32,16 +52,28 @@ const {
       <header class="article-head">
         <h1>{title}</h1>
         {description && <p class="lead">{description}</p>}
-        {(date || tags.length > 0) && (
+        {(date || tags.length > 0 || minutes > 0) && (
           <div class="article-meta">
             {date && <FormattedDate date={date} />}
-            {tags.map((t) => <span class="tag">{t}</span>)}
+            {minutes > 0 && <>
+              <span class="sep">·</span><span>约 {minutes} 分钟</span>
+            </>}
+            {tags.map((t) => {
+              const href = tagHref(t);
+              return href
+                ? <a href={href} class="tag tag-link">{t}</a>
+                : <span class="tag">{t}</span>;
+            })}
           </div>
         )}
       </header>
 
-      <div class="prose">
-        <slot />
+      <!-- 双栏布局：正文 + TOC -->
+      <div class:list={['article-grid', { 'with-toc': showToc }]}>
+        <div class="prose">
+          <slot />
+        </div>
+        {showToc && <TableOfContents headings={headings} />}
       </div>
 
       {backHref && (
@@ -63,6 +95,7 @@ const {
     margin-bottom: var(--space-12);
     padding-bottom: var(--space-8);
     border-bottom: 1px solid var(--color-border);
+    max-width: var(--content-width);
   }
   .article-head h1 {
     margin-bottom: var(--space-3);
@@ -80,10 +113,47 @@ const {
     font-family: var(--font-mono);
     color: var(--color-text-mute);
   }
+  .sep { opacity: 0.5; }
+  .tag-link {
+    text-decoration: none;
+    transition: border-color var(--transition), color var(--transition);
+  }
+  .tag-link:hover {
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
+  }
+
+  /* ---- 双栏网格 ---- */
+  .article-grid {
+    display: block; /* 默认单栏（无 TOC 或移动端） */
+  }
+  .article-grid.with-toc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 180px;
+    gap: var(--space-12);
+    align-items: start;
+  }
+
   .article-foot {
     margin-top: var(--space-16);
     padding-top: var(--space-8);
     border-top: 1px solid var(--color-border);
     font-size: var(--font-size-sm);
+    max-width: var(--content-width);
+  }
+
+  /* 锚点跳转时避开导航栏 */
+  .prose :global([id]) {
+    scroll-margin-top: 80px;
+  }
+
+  /* 移动端：隐藏 TOC 列 */
+  @media (max-width: 800px) {
+    .article-grid.with-toc {
+      grid-template-columns: 1fr;
+    }
+    .article-grid.with-toc :global(.toc) {
+      display: none;
+    }
   }
 </style>

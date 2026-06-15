@@ -2,10 +2,12 @@
 // 列表卡片 —— 博客/工具/产品三类内容共用
 // 根据 entry 的集合类型决定是「外链卡」还是「详情页卡」
 import FormattedDate from './FormattedDate.astro';
+import { readingTime } from '../lib/reading-time';
 
 interface CardEntry {
   collection: 'blog' | 'tools' | 'products';
   slug: string;
+  body?: string;
   data: {
     title: string;
     description?: string;
@@ -21,7 +23,10 @@ interface Props {
   entry: CardEntry;
 }
 const { entry } = Astro.props;
-const { collection, slug, data } = entry;
+const { collection, slug, data, body } = entry;
+
+// 仅博客显示阅读时长（工具/产品无意义）
+const minutes = collection === 'blog' && body ? readingTime(body) : 0;
 
 // 有外部 url 的（工具/产品）整卡跳外链；否则跳详情页
 const isExternal = Boolean(data.url);
@@ -33,6 +38,8 @@ const href = isExternal
   <a href={href} class="card-link" {...(isExternal ? { target: '_blank', rel: 'noopener' } : {})}>
     <div class="card-meta">
       <FormattedDate date={data.date} />
+      {minutes > 0 && <span class="dot-sep">·</span>}
+      {minutes > 0 && <span>{minutes} 分钟</span>}
       {data.status && <span class="status">{data.status}</span>}
     </div>
     <h3 class="card-title">{data.title}</h3>
@@ -77,6 +84,7 @@ const href = isExternal
     letter-spacing: 0.05em;
     color: var(--color-text);
   }
+  .dot-sep { opacity: 0.5; }
   .card-title {
     font-size: var(--font-size-lg);
     line-height: 1.3;

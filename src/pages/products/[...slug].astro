@@ -12,7 +12,7 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 const { data } = entry;
 ---
 <Article
@@ -20,6 +20,9 @@ const { data } = entry;
   description={data.description}
   date={data.date}
   tags={data.tags}
+  collection="products"
+  body={entry.body}
+  headings={headings}
   backHref="/products"
   backLabel="返回产品"
 >

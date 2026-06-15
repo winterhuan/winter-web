@@ -1,0 +1,64 @@
+---
+// 标签筛选结果页 —— 博客/工具/产品共用
+// 由各集合目录下的 tags/[tag].astro 调用
+import Base from './Base.astro';
+import Card from '../components/Card.astro';
+import TagCloud from '../components/TagCloud.astro';
+import { getAllTags } from '../lib/content';
+
+type CollectionName = 'blog' | 'tools' | 'products';
+
+interface Props {
+  collection: CollectionName;
+  /** 单数集合中文名，如「博客」 */
+  label: string;
+  /** 当前标签 */
+  tag: string;
+  /** 该标签下的条目（已在外层查好） */
+  entries: import('astro:content').CollectionEntry<CollectionName>[];
+}
+
+const { collection, label, tag, entries } = Astro.props;
+const allTags = await getAllTags(collection);
+---
+<Base title={`${label} · ${tag}`} description={`标签「${tag}」下的${label}`}>
+  <section class="section">
+    <div class="container">
+      <header class="page-head">
+        <h1>{label} <span class="muted">/ {tag}</span></h1>
+        <p class="lead">{label}中带「{tag}」标签的内容。</p>
+      </header>
+
+      <TagCloud collection={collection} tags={allTags} active={tag} />
+
+      {entries.length > 0 ? (
+        <div class="grid">
+          {entries.map((entry) => <Card entry={entry} />)}
+        </div>
+      ) : (
+        <p class="muted empty">这个标签下还没有内容。</p>
+      )}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head {
+    margin-bottom: var(--space-8);
+    padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .page-head h1 { font-size: var(--font-size-3xl); }
+  .page-head .lead { margin-top: var(--space-2); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-4);
+  }
+  .empty {
+    padding: var(--space-8);
+    text-align: center;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+</style>

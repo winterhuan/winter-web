@@ -17,3 +17,23 @@ export async function getLatest<K extends CollectionName>(name: K, n: number) {
   const all = await getPublished(name);
   return all.slice(0, n);
 }
+
+/** 获取某集合的全部标签，按出现次数倒序 */
+export async function getAllTags(name: CollectionName): Promise<{ tag: string; count: number }[]> {
+  const entries = await getPublished(name);
+  const counts = new Map<string, number>();
+  for (const entry of entries) {
+    for (const tag of entry.data.tags ?? []) {
+      counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+}
+
+/** 按标签过滤某集合的条目 */
+export async function getByTag(name: CollectionName, tag: string) {
+  const entries = await getPublished(name);
+  return entries.filter((e) => e.data.tags?.includes(tag));
+}

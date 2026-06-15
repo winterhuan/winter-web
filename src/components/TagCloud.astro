@@ -1,0 +1,56 @@
+---
+// 标签云 —— 用于列表页顶部，点击跳到对应标签的筛选页
+interface Props {
+  /** 当前集合名，决定标签链接前缀 */
+  collection: 'blog' | 'tools' | 'products';
+  /** 所有标签，含出现次数 */
+  tags: { tag: string; count: number }[];
+  /** 当前激活的标签（在标签筛选页上高亮）；默认无 */
+  active?: string;
+}
+const { collection, tags, active } = Astro.props;
+---
+{tags.length > 0 && (
+  <nav class="tag-cloud" aria-label="按标签筛选">
+    <a
+      href={`/${collection}`}
+      class:list={['tag', 'tag-item', { active: !active }]}
+    >全部</a>
+    {tags.map(({ tag, count }) => (
+      <a
+        href={`/${collection}/tags/${encodeURIComponent(tag)}`}
+        class:list={['tag', 'tag-item', { active: active === tag }]}
+      >{tag}<span class="count">{count}</span></a>
+    ))}
+  </nav>
+)}
+
+<style>
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-8);
+  }
+  .tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    text-decoration: none;
+    transition: border-color var(--transition), color var(--transition), background var(--transition);
+  }
+  .tag-item:hover {
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
+  }
+  .tag-item.active {
+    color: var(--color-accent-contrast);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .count {
+    font-size: 0.625rem;
+    opacity: 0.6;
+  }
+  .tag-item.active .count { opacity: 0.7; }
+</style>

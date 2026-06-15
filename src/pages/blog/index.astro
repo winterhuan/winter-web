@@ -1,9 +1,11 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Card from '../../components/Card.astro';
-import { getPublished } from '../../lib/content';
+import TagCloud from '../../components/TagCloud.astro';
+import { getPublished, getAllTags } from '../../lib/content';
 
 const entries = await getPublished('blog');
+const tags = await getAllTags('blog');
 ---
 <Base title="博客" description="Winter 的博客文章 —— 思考、笔记与记录。">
   <section class="section">
@@ -12,6 +14,8 @@ const entries = await getPublished('blog');
         <h1>博客</h1>
         <p class="lead">思考、笔记与记录。</p>
       </header>
+
+      <TagCloud collection="blog" tags={tags} />
 
       {entries.length > 0 ? (
         <div class="list">
@@ -26,7 +30,7 @@ const entries = await getPublished('blog');
 
 <style>
   .page-head {
-    margin-bottom: var(--space-12);
+    margin-bottom: var(--space-8);
     padding-bottom: var(--space-6);
     border-bottom: 1px solid var(--color-border);
   }

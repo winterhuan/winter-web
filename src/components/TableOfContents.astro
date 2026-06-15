@@ -1,0 +1,117 @@
+---
+// 文章目录 —— 右侧粘性侧栏，桌面端显示
+// 滚动时用 IntersectionObserver 高亮当前章节
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+const { headings } = Astro.props;
+
+// 只取 h2/h3，且至少 3 个才显示
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const show = toc.length >= 3;
+---
+{show && (
+  <aside class="toc" aria-label="文章目录">
+    <p class="toc-title">目录</p>
+    <nav>
+      <ul class="toc-list">
+        {toc.map((h) => (
+          <li class:list={['toc-item', `depth-${h.depth}`]}>
+            <a href={`#${h.slug}`} class="toc-link" data-toc-target={h.slug}>{h.text}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </aside>
+)}
+
+<style>
+  .toc {
+    /* 桌面端：粘性定位在右侧栏；移动端由 Article 布局隐藏 */
+    position: sticky;
+    top: 88px; /* 导航栏高度 64 + 间距 */
+    align-self: start;
+    font-size: var(--font-size-sm);
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+  .toc-title {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-3);
+  }
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-left: 1px solid var(--color-border);
+  }
+  .toc-item {
+    margin: 0;
+  }
+  .toc-link {
+    display: block;
+    padding: var(--space-1) var(--space-4);
+    color: var(--color-text-mute);
+    text-decoration: none;
+    line-height: 1.4;
+    border-left: 2px solid transparent;
+    margin-left: -1px; /* 覆盖列表边框 */
+    transition: color var(--transition), border-color var(--transition);
+  }
+  .toc-link:hover {
+    color: var(--color-text);
+  }
+  .toc-link.active {
+    color: var(--color-text);
+    border-left-color: var(--color-text);
+    font-weight: 500;
+  }
+  /* h3 缩进 */
+  .depth-3 .toc-link {
+    padding-left: var(--space-8);
+    font-size: var(--font-size-xs);
+  }
+  /* 移动端不显示（由 Article 的网格控制） */
+</style>
+
+<script>
+  // 滚动高亮：监测当前可视区间的标题，高亮对应 TOC 项
+  const links = document.querySelectorAll<HTMLAnchorElement>('.toc-link');
+  if (links.length > 0) {
+    const byId = new Map<string, HTMLAnchorElement>();
+    links.forEach((l) => {
+      const id = l.dataset.tocTarget;
+      if (id) byId.set(id, l);
+    });
+
+    const targets = [...byId.keys()]
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // 选当前最靠上、仍可见的标题
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length === 0) return;
+        const active = visible[0].target.id;
+        links.forEach((l) => l.classList.toggle('active', l.dataset.tocTarget === active));
+      },
+      // 顶部留出导航栏高度的偏移
+      { rootMargin: '-88px 0px -70% 0px', threshold: 0 }
+    );
+
+    targets.forEach((t) => observer.observe(t));
+  }
+</script>
