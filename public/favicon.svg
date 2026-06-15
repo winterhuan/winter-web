@@ -1,4 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#0a0a0a" />
-  <circle cx="16" cy="16" r="7" fill="#fafafa" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- 太极图（阴阳）—— 用圆形图层叠加构造，几何可靠
+       大圆 r=14 圆心(16,16)；小圆 r=7 圆心分别在(16,9)(16,23) -->
+  <!-- 1. 白色大圆底 -->
+  <circle cx="16" cy="16" r="14" fill="#fafafa"/>
+  <!-- 2. 黑色右半圆（垂直分界） -->
+  <path d="M16,2 A14,14 0 0,1 16,30 L16,2 Z" fill="#0a0a0a"/>
+  <!-- 3. 上方白色小圆：白色凸入黑侧，构成 S 上半弯 -->
+  <circle cx="16" cy="9" r="7" fill="#fafafa"/>
+  <!-- 4. 下方黑色小圆：黑色凸入白侧，构成 S 下半弯 -->
+  <circle cx="16" cy="23" r="7" fill="#0a0a0a"/>
+  <!-- 5. 阴阳眼：白区内的黑点 -->
+  <circle cx="16" cy="9" r="2.8" fill="#0a0a0a"/>
+  <!-- 6. 阴阳眼：黑区内的白点 -->
+  <circle cx="16" cy="23" r="2.8" fill="#fafafa"/>
+  <!-- 细外环：确保 favicon 在浅色/深色背景下都清晰 -->
+  <circle cx="16" cy="16" r="13.75" fill="none" stroke="#0a0a0a" stroke-width="0.5" opacity="0.15"/>
 </svg>
