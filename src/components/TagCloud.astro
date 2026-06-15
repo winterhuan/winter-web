@@ -1,5 +1,6 @@
 ---
 // 标签云 —— 用于列表页顶部，点击跳到对应标签的筛选页
+// 视觉：标签按热度分级（字号随 count 递增），计数用上标样式
 interface Props {
   /** 当前集合名，决定标签链接前缀 */
   collection: 'blog' | 'tools' | 'products';
@@ -9,6 +10,16 @@ interface Props {
   active?: string;
 }
 const { collection, tags, active } = Astro.props;
+
+// 计算最大计数，用于热度分级
+const maxCount = tags.length > 0 ? Math.max(...tags.map((t) => t.count)) : 1;
+// 按热度分 3 级：1=少 2=中 3=多
+const heatLevel = (count: number) => {
+  const ratio = count / maxCount;
+  if (ratio > 0.66) return 'hot';
+  if (ratio > 0.33) return 'warm';
+  return 'cool';
+};
 ---
 {tags.length > 0 && (
   <nav class="tag-cloud" aria-label="按标签筛选">
@@ -19,9 +30,13 @@ const { collection, tags, active } = Astro.props;
     {tags.map(({ tag, count }) => (
       <a
         href={`/${collection}/tags/${encodeURIComponent(tag)}`}
-        class:list={['tag', 'tag-item', { active: active === tag }]}
-      >{tag}<span class="count">{count}</span></a>
+        class:list={['tag', 'tag-item', heatLevel(count), { active: active === tag }]}
+      >
+        <span class="label">{tag}</span>
+        <span class="count">{count}</span>
+      </a>
     ))}
+    <a href="/tags" class="all-tags link-underline">全部标签 →</a>
   </nav>
 )}
 
@@ -29,28 +44,36 @@ const { collection, tags, active } = Astro.props;
   .tag-cloud {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-2);
     margin-bottom: var(--space-8);
+    padding-bottom: var(--space-6);
+    border-bottom: 1px dashed var(--color-border);
   }
+  .all-tags {
+    margin-left: auto;
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+  }
+  .all-tags:hover { color: var(--color-text); }
   .tag-item {
     display: inline-flex;
-    align-items: center;
+    align-items: baseline;
     gap: var(--space-1);
-    text-decoration: none;
-    transition: border-color var(--transition), color var(--transition), background var(--transition);
+    padding: var(--space-1) var(--space-3);
   }
-  .tag-item:hover {
-    color: var(--color-text);
-    border-color: var(--color-border-strong);
-  }
-  .tag-item.active {
-    color: var(--color-accent-contrast);
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-  }
+  /* 热度分级：用颜色深浅区分，而不是字号（保持排版整齐） */
+  .tag-item.cool .label { color: var(--color-text-mute); }
+  .tag-item.warm .label { color: var(--color-text-soft); }
+  .tag-item.hot .label { color: var(--color-text); font-weight: 500; }
+
   .count {
     font-size: 0.625rem;
-    opacity: 0.6;
+    opacity: 0.55;
+    font-variant-numeric: tabular-nums; /* 等宽数字对齐 */
   }
-  .tag-item.active .count { opacity: 0.7; }
+  .tag-item.active .count { opacity: 0.75; }
+  /* 激活态覆盖热度色 */
+  .tag-item.active .label { color: var(--color-accent-contrast); }
 </style>

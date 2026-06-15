@@ -1,0 +1,108 @@
+---
+// 全局标签总览页 —— /tags
+// 汇总所有集合的标签，按总热度排序，标注每个标签分布在哪些集合
+import Base from '../../layouts/Base.astro';
+import { getAllTagsGlobal } from '../../lib/content';
+
+const tags = await getAllTagsGlobal();
+
+const collectionLabel: Record<string, string> = {
+  blog: '博客',
+  tools: '工具',
+  products: '产品',
+};
+// 同一个标签如果只出现在一个集合，直接跳那个集合的标签页；
+// 否则跳出现次数最多的那个（用户大概率想看最多的）
+const primaryHref = (tag: typeof tags[number]) => {
+  const sorted = [...tag.collections].sort((a, b) => b.count - a.count);
+  const top = sorted[0];
+  return `/${top.name}/tags/${encodeURIComponent(tag.tag)}`;
+};
+---
+<Base title="标签" description="所有内容的标签总览 —— 博客、工具、产品。">
+  <section class="section">
+    <div class="container">
+      <header class="page-head">
+        <h1>标签</h1>
+        <p class="lead">所有内容的标签总览，按热度排序。</p>
+      </header>
+
+      {tags.length > 0 ? (
+        <div class="tag-grid">
+          {tags.map((tag) => (
+            <a href={primaryHref(tag)} class="global-tag" title={`${tag.tag} · 共 ${tag.count} 篇`}>
+              <span class="g-label">{tag.tag}</span>
+              <span class="g-count">{tag.count}</span>
+              <span class="g-sources">
+                {tag.collections.map((c) => (
+                  <span class="g-source">{collectionLabel[c.name]}</span>
+                ))}
+              </span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="muted empty">还没有任何标签。</p>
+      )}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .page-head {
+    margin-bottom: var(--space-12);
+    padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .page-head h1 { font-size: var(--font-size-3xl); }
+  .page-head .lead { margin-top: var(--space-2); }
+
+  .tag-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-3);
+  }
+  .global-tag {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    text-decoration: none;
+    transition: border-color var(--transition), transform var(--transition);
+  }
+  .global-tag:hover {
+    border-color: var(--color-border-strong);
+    transform: translateY(-2px);
+  }
+  .g-label {
+    font-weight: 600;
+    font-size: var(--font-size-base);
+  }
+  .g-count {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-mute);
+  }
+  .g-sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin-top: auto;
+  }
+  .g-source {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-mute);
+    padding: 1px var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+  }
+  .empty {
+    padding: var(--space-8);
+    text-align: center;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+</style>

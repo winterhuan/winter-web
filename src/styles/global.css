@@ -194,15 +194,34 @@ p {
   color: var(--color-text);
 }
 
-/* 标签 / pill */
+/* 标签 / pill —— 全站统一的标签视觉语言 */
 .tag {
   display: inline-block;
   padding: 2px var(--space-2);
   font-size: var(--font-size-xs);
   font-family: var(--font-mono);
+  line-height: 1.5;
   border: 1px solid var(--color-border);
   border-radius: 999px;
   color: var(--color-text-mute);
+  white-space: nowrap;
+  transition: border-color var(--transition), color var(--transition), background var(--transition);
+}
+/* 可点击标签（链接） */
+a.tag {
+  text-decoration: none;
+  cursor: pointer;
+}
+a.tag:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+/* 激活/选中态（当前筛选标签） */
+a.tag.active,
+a.tag:active {
+  color: var(--color-accent-contrast);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 /* 区块标题行（标题 + 链接） */

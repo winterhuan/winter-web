@@ -1,6 +1,6 @@
 ---
 // 标签筛选结果页 —— 博客/工具/产品共用
-// 由各集合目录下的 tags/[tag].astro 调用
+// 面包屑 + 结果数 + TagCloud + 卡片列表
 import Base from './Base.astro';
 import Card from '../components/Card.astro';
 import TagCloud from '../components/TagCloud.astro';
@@ -21,12 +21,26 @@ interface Props {
 const { collection, label, tag, entries } = Astro.props;
 const allTags = await getAllTags(collection);
 ---
-<Base title={`${label} · ${tag}`} description={`标签「${tag}」下的${label}`}>
+<Base title={`${label} · ${tag}`} description={`标签「${tag}」下的${label}，共 ${entries.length} 条。`}>
   <section class="section">
     <div class="container">
+      <!-- 面包屑 -->
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/" class="muted">首页</a>
+        <span class="sep">/</span>
+        <a href={`/${collection}`} class="muted">{label}</a>
+        <span class="sep">/</span>
+        <a href="/tags" class="muted">标签</a>
+        <span class="sep">/</span>
+        <span>{tag}</span>
+      </nav>
+
       <header class="page-head">
         <h1>{label} <span class="muted">/ {tag}</span></h1>
-        <p class="lead">{label}中带「{tag}」标签的内容。</p>
+        <p class="lead">
+          共 <strong>{entries.length}</strong> 条结果
+          <a href={`/${collection}`} class="clear-btn link-underline">清除筛选</a>
+        </p>
       </header>
 
       <TagCloud collection={collection} tags={allTags} active={tag} />
@@ -43,13 +57,39 @@ const allTags = await getAllTags(collection);
 </Base>
 
 <style>
+  .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+    margin-bottom: var(--space-8);
+  }
+  .breadcrumb a:hover { color: var(--color-text); }
+  .sep { opacity: 0.4; }
+
   .page-head {
     margin-bottom: var(--space-8);
     padding-bottom: var(--space-6);
     border-bottom: 1px solid var(--color-border);
   }
   .page-head h1 { font-size: var(--font-size-3xl); }
-  .page-head .lead { margin-top: var(--space-2); }
+  .page-head .lead {
+    margin-top: var(--space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+  .clear-btn {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+    margin-left: auto;
+  }
+  .clear-btn:hover { color: var(--color-text); }
+
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

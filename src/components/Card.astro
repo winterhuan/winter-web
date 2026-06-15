@@ -1,8 +1,9 @@
 ---
 // 列表卡片 —— 博客/工具/产品三类内容共用
-// 根据 entry 的集合类型决定是「外链卡」还是「详情页卡」
+// 标签可点击（用事件委托跳转，避免 a 嵌套 a）
 import FormattedDate from './FormattedDate.astro';
 import { readingTime } from '../lib/reading-time';
+import { normalizeTags } from '../lib/content';
 
 interface CardEntry {
   collection: 'blog' | 'tools' | 'products';
@@ -25,6 +26,8 @@ interface Props {
 const { entry } = Astro.props;
 const { collection, slug, data, body } = entry;
 
+// 标签归一化
+const tags = normalizeTags(data.tags);
 // 仅博客显示阅读时长（工具/产品无意义）
 const minutes = collection === 'blog' && body ? readingTime(body) : 0;
 
@@ -44,9 +47,16 @@ const href = isExternal
     </div>
     <h3 class="card-title">{data.title}</h3>
     {data.description && <p class="card-desc">{data.description}</p>}
-    {(data.tags?.length || data.repo) && (
+    {(tags.length > 0 || data.repo) && (
       <div class="card-foot">
-        {data.tags?.map((t) => <span class="tag">{t}</span>)}
+        {tags.map((t) => (
+          <span
+            class="tag tag-clickable"
+            data-href={`/${collection}/tags/${encodeURIComponent(t)}`}
+            role="link"
+            tabindex="0"
+          >{t}</span>
+        ))}
         {data.repo && <span class="repo muted">↗ 源码</span>}
       </div>
     )}
@@ -102,4 +112,36 @@ const href = isExternal
     margin-top: auto;
   }
   .repo { font-size: var(--font-size-xs); }
+  /* 可点击标签 */
+  .tag-clickable {
+    cursor: pointer;
+  }
+  .tag-clickable:hover {
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
+  }
 </style>
+
+<script>
+  // 事件委托：点击卡片内的标签 → 跳转到对应标签页
+  // 用委托而非内联，避免每个标签绑一个监听器
+  document.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest('.tag-clickable') as HTMLElement | null;
+    if (!target) return;
+    const href = target.dataset.href;
+    if (!href) return;
+    e.preventDefault();   // 阻止冒泡到卡片链接
+    e.stopPropagation();
+    location.href = href;
+  });
+  // 键盘可访问：Enter / Space 触发
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const target = (e.target as HTMLElement).closest('.tag-clickable') as HTMLElement | null;
+    if (!target) return;
+    const href = target.dataset.href;
+    if (!href) return;
+    e.preventDefault();
+    location.href = href;
+  });
+</script>
