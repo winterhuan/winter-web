@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Card from '../components/Card.astro';
+import Logo from '../components/Logo.astro';
 import { AUTHOR } from '../consts';
 import { getLatest } from '../lib/content';
 
@@ -21,7 +22,7 @@ const sections = [
   <!-- Hero -->
   <section class="hero">
     <div class="container">
-      <h1 class="hero-name">{AUTHOR.name}<span class="dot">.</span></h1>
+      <h1 class="hero-name">{AUTHOR.name}<Logo size={56} class="hero-logo" /></h1>
       <p class="hero-tagline">{AUTHOR.tagline}</p>
       <p class="hero-bio">{AUTHOR.bio}</p>
     </div>
@@ -57,8 +58,19 @@ const sections = [
     font-weight: 800;
     letter-spacing: -0.04em;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
   }
-  .dot { color: var(--color-text-mute); }
+  .hero-name :global(.taiji-logo) {
+    /* hover 时缓慢旋转一圈，呼应「太极」意象 */
+    transition: transform 800ms ease;
+    animation: spin-in 900ms cubic-bezier(0.5, 0, 0.2, 1) both;
+    animation-delay: 200ms;
+  }
+  .hero-name:hover :global(.taiji-logo) {
+    transform: rotate(360deg);
+  }
   .hero-tagline {
     font-size: var(--font-size-xl);
     color: var(--color-text);

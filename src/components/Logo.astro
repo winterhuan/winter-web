@@ -1,0 +1,49 @@
+---
+// 太极 logo —— favicon 和 brand mark 共享同一份 SVG
+// 颜色用 CSS 变量，自动跟随深/浅主题反转
+interface Props {
+  /** 像素尺寸，默认跟随字号（1em） */
+  size?: number | string;
+  class?: string;
+}
+const { size = '1em', class: className } = Astro.props;
+---
+<svg
+  class:list={['taiji-logo', className]}
+  width={size}
+  height={size}
+  viewBox="0 0 32 32"
+  aria-hidden="true"
+  focusable="false"
+>
+  <!-- 白色大圆底 -->
+  <circle cx="16" cy="16" r="14" fill="var(--color-accent-contrast)" />
+  <!-- 黑色右半圆（垂直分界） -->
+  <path d="M16,2 A14,14 0 0,1 16,30 L16,2 Z" fill="var(--color-accent)" />
+  <!-- 上方小圆：凸入黑侧，构成 S 上半弯 -->
+  <circle cx="16" cy="9" r="7" fill="var(--color-accent-contrast)" />
+  <!-- 下方小圆：凸入白侧，构成 S 下半弯 -->
+  <circle cx="16" cy="23" r="7" fill="var(--color-accent)" />
+  <!-- 阴阳眼：白区内黑点 -->
+  <circle cx="16" cy="9" r="2.8" fill="var(--color-accent)" />
+  <!-- 阴阳眼：黑区内白点 -->
+  <circle cx="16" cy="23" r="2.8" fill="var(--color-accent-contrast)" />
+  <!-- 细外环：勾勒边界 -->
+  <circle cx="16" cy="16" r="13.75" fill="none" stroke="var(--color-accent)" stroke-width="0.5" opacity="0.25" />
+</svg>
+
+<style>
+  .taiji-logo {
+    display: inline-block;
+    vertical-align: middle;
+    /* 旋转入场，呼应「太极」意象 */
+    animation: spin-in 600ms cubic-bezier(0.5, 0, 0.2, 1) both;
+  }
+  @keyframes spin-in {
+    from { transform: rotate(-90deg) scale(0.6); opacity: 0; }
+    to { transform: rotate(0) scale(1); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .taiji-logo { animation: none; }
+  }
+</style>

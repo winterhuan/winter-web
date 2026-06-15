@@ -2,6 +2,7 @@
 // 顶部导航
 import { NAV_LINKS, SITE_TITLE } from '../consts';
 import ThemeToggle from './ThemeToggle.astro';
+import Logo from './Logo.astro';
 
 const pathname = Astro.url.pathname;
 const isActive = (href: string) =>
@@ -10,7 +11,7 @@ const isActive = (href: string) =>
 <header class="site-header">
   <div class="container nav-inner">
     <a href="/" class="brand" aria-label={SITE_TITLE}>
-      <span class="brand-mark">●</span>
+      <Logo size={22} />
       <span class="brand-text">{SITE_TITLE}</span>
     </a>
 
@@ -53,14 +54,16 @@ const isActive = (href: string) =>
   .brand {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
     font-weight: 700;
     letter-spacing: -0.02em;
     font-size: var(--font-size-base);
   }
-  .brand-mark {
-    font-size: 0.6rem;
-    line-height: 1;
+  .brand :global(.taiji-logo) {
+    transition: transform 400ms ease;
+  }
+  .brand:hover :global(.taiji-logo) {
+    transform: rotate(180deg); /* hover 时太极转半圈 */
   }
   .nav-list {
     display: flex;
