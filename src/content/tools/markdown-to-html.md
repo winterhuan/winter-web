@@ -3,7 +3,7 @@ title: 'Markdown 转 HTML'
 description: '一个极简的在线 Markdown 转 HTML 工具，支持实时预览。'
 date: 2026-06-05
 tags: ['Markdown', '前端']
-url: 'https://example.com/markdown-to-html'
+app: true
 repo: 'https://github.com/'
 ---
 

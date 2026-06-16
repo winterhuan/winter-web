@@ -3,7 +3,7 @@ title: '调色板生成器'
 description: '从一个基础色出发，自动生成完整的配色方案，支持导出为 CSS 变量。'
 date: 2026-06-10
 tags: ['设计', 'CSS']
-url: 'https://example.com/color-picker'
+app: true
 repo: 'https://github.com/'
 ---
 

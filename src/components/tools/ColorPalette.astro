@@ -1,0 +1,314 @@
+---
+// 调色板生成器 —— 选一个基础色，生成 Tailwind 风格的 50–950 色阶
+// 支持导出 CSS 变量 / Tailwind 配置 / JSON，点击色块复制 hex
+---
+<div class="palette-tool">
+  <!-- 控制区 -->
+  <div class="palette-controls">
+    <div class="color-picker-group">
+      <input type="color" id="cp-native" class="cp-native" value="#6366f1" />
+      <input
+        type="text"
+        id="cp-hex"
+        class="cp-hex"
+        value="#6366f1"
+        maxlength="7"
+        spellcheck="false"
+        placeholder="#000000"
+      />
+      <button class="action" id="cp-random">🎲 随机</button>
+    </div>
+    <div class="palette-name-group">
+      <label for="cp-name" class="field-label">变量名</label>
+      <input
+        type="text"
+        id="cp-name"
+        class="cp-name"
+        value="primary"
+        spellcheck="false"
+        placeholder="primary"
+      />
+    </div>
+  </div>
+
+  <!-- 色阶条 -->
+  <div class="palette-shades" id="palette-shades">
+    <!-- JS 动态生成 -->
+  </div>
+
+  <!-- 导出按钮 -->
+  <div class="palette-export">
+    <button class="action" data-export="css">复制 CSS 变量</button>
+    <button class="action" data-export="tailwind">复制 Tailwind 配置</button>
+    <button class="action" data-export="json">复制 JSON</button>
+  </div>
+</div>
+
+<style>
+  .palette-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+  .palette-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+  }
+  .color-picker-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .cp-native {
+    width: 40px;
+    height: 40px;
+    padding: 2px;
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--radius);
+    background: none;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .cp-hex {
+    width: 110px;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .cp-hex:focus { border-color: var(--color-border-strong); }
+
+  .palette-name-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .field-label {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .cp-name {
+    width: 120px;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .cp-name:focus { border-color: var(--color-border-strong); }
+
+  .action {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-size-sm);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius);
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    cursor: pointer;
+    transition: opacity var(--transition);
+    white-space: nowrap;
+  }
+  .action:hover { opacity: 0.85; }
+
+  /* 色阶条 */
+  .palette-shades {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    gap: 4px;
+  }
+  .shade-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    transition: transform var(--transition), box-shadow var(--transition);
+  }
+  .shade-block:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  .shade-swatch {
+    width: 100%;
+    aspect-ratio: 1;
+    transition: background-color var(--transition);
+  }
+  .shade-info {
+    padding: var(--space-2) var(--space-1);
+    text-align: center;
+    background: var(--color-surface);
+    width: 100%;
+  }
+  .shade-step {
+    display: block;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  .shade-hex {
+    display: block;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+    margin-top: 1px;
+  }
+
+  /* 导出栏 */
+  .palette-export {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  /* 移动端：色阶改为 2 行 */
+  @media (max-width: 700px) {
+    .palette-shades {
+      grid-template-columns: repeat(6, 1fr);
+    }
+    .palette-controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .color-picker-group, .palette-name-group {
+      justify-content: stretch;
+    }
+    .cp-hex { flex: 1; }
+  }
+</style>
+
+<script>
+  import {
+    generatePalette,
+    toCSSVariables,
+    toTailwindConfig,
+    toJSON,
+    randomBaseColor,
+    hexToRgb,
+  } from '../../lib/color';
+
+  const nativePicker = document.getElementById('cp-native') as HTMLInputElement;
+  const hexInput = document.getElementById('cp-hex') as HTMLInputElement;
+  const nameInput = document.getElementById('cp-name') as HTMLInputElement;
+  const randomBtn = document.getElementById('cp-random');
+  const shadesContainer = document.getElementById('palette-shades');
+
+  let currentPalette: Record<number, string> | null = null;
+
+  function update(hex: string) {
+    const palette = generatePalette(hex);
+    if (!palette) return;
+    currentPalette = palette;
+    // 同步输入框
+    nativePicker.value = hex;
+    hexInput.value = hex;
+    renderShades(palette);
+  }
+
+  function renderShades(palette: Record<number, string>) {
+    if (!shadesContainer) return;
+    shadesContainer.innerHTML = '';
+    const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+    steps.forEach((step) => {
+      const hexVal = palette[step];
+      const block = document.createElement('div');
+      block.className = 'shade-block';
+      block.title = `点击复制 ${hexVal}`;
+      block.innerHTML = `
+        <div class="shade-swatch" style="background-color: ${hexVal}"></div>
+        <div class="shade-info">
+          <span class="shade-step">${step}</span>
+          <span class="shade-hex">${hexVal.slice(1).toUpperCase()}</span>
+        </div>
+      `;
+      block.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(hexVal);
+          flashButton(block, '已复制');
+        } catch {
+          flashButton(block, '失败');
+        }
+      });
+      shadesContainer.appendChild(block);
+    });
+  }
+
+  // 原生颜色选择器
+  nativePicker.addEventListener('input', () => {
+    update(nativePicker.value);
+  });
+
+  // hex 文本输入
+  hexInput.addEventListener('input', () => {
+    let val = hexInput.value.trim();
+    if (!val.startsWith('#')) val = '#' + val;
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+      update(val);
+    }
+  });
+  hexInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      hexInput.blur();
+    }
+  });
+
+  // 随机按钮
+  randomBtn?.addEventListener('click', () => {
+    update(randomBaseColor());
+  });
+
+  // 导出按钮
+  document.querySelectorAll('[data-export]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (!currentPalette) return;
+      const type = (btn as HTMLElement).dataset.export!;
+      const name = nameInput.value.trim() || 'primary';
+      let text = '';
+      switch (type) {
+        case 'css':
+          text = toCSSVariables(name, currentPalette as any);
+          break;
+        case 'tailwind':
+          text = toTailwindConfig(name, currentPalette as any);
+          break;
+        case 'json':
+          text = toJSON(currentPalette as any);
+          break;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        flashButton(btn as HTMLElement, '已复制 ✓');
+      } catch {
+        flashButton(btn as HTMLElement, '复制失败');
+      }
+    });
+  });
+
+  function flashButton(el: Element, msg: string) {
+    const btn = el as HTMLElement;
+    const orig = btn.textContent;
+    btn.textContent = msg;
+    setTimeout(() => { btn.textContent = orig; }, 1400);
+  }
+
+  // 初始渲染
+  update('#6366f1');
+</script>

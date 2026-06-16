@@ -11,10 +11,11 @@ const baseSchema = z.object({
   draft: z.boolean().optional().default(false),
 });
 
-// 工具/产品共享的扩展字段：外部链接 + 源码仓库
+// 工具/产品共享的扩展字段：外部链接 + 源码仓库 + 站内工具
 const projectSchema = baseSchema.extend({
-  url: z.string().url().optional(),   // 在线试用地址
+  url: z.string().url().optional(),   // 外部在线试用地址
   repo: z.string().url().optional(),  // 源码仓库
+  app: z.boolean().optional(),        // 是否有站内交互工具页（/tools/<slug>/app）
 });
 
 const blog = defineCollection({

@@ -26,8 +26,9 @@ const { data } = entry;
   backHref="/tools"
   backLabel="返回工具"
 >
-  {(data.url || data.repo) && (
+  {(data.url || data.repo || data.app) && (
     <p class="entry-actions">
+      {data.app && <a class="btn" href={`/tools/${entry.slug}/app`}>打开工具 →</a>}
       {data.url && <a class="btn" href={data.url} target="_blank" rel="noopener">在线试用 →</a>}
       {data.repo && <a class="btn btn-ghost" href={data.repo} target="_blank" rel="noopener">查看源码</a>}
     </p>

@@ -1,0 +1,268 @@
+---
+// Markdown 转 HTML 交互工具
+// 左输入右预览，可切换查看 HTML 源码，复制，自动保存
+---
+<div class="md-tool">
+  <div class="md-toolbar">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-mode="preview" role="tab" aria-selected="true">预览</button>
+      <button class="tab" data-mode="source" role="tab" aria-selected="false">HTML 源码</button>
+    </div>
+    <div class="actions">
+      <button class="action" data-action="copy">复制 HTML</button>
+      <button class="action ghost" data-action="clear">清空</button>
+    </div>
+  </div>
+
+  <div class="md-pane">
+    <!-- 输入区 -->
+    <div class="md-input-wrap">
+      <label class="pane-label">Markdown 输入</label>
+      <textarea
+        class="md-input"
+        id="md-input"
+        spellcheck="false"
+        placeholder="# 标题&#10;&#10;在这里写 Markdown，右侧实时预览。"
+      ></textarea>
+    </div>
+
+    <!-- 输出区 -->
+    <div class="md-output-wrap">
+      <div class="pane-label">
+        <span data-output-label>预览</span>
+      </div>
+      <div class="md-output" id="md-preview prose"><!-- 预览渲染处 --></div>
+      <pre class="md-source" id="md-source" hidden><code></code></pre>
+    </div>
+  </div>
+
+  <p class="md-hint muted">内容自动保存在浏览器本地，刷新不会丢失。</p>
+</div>
+
+<style>
+  .md-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    height: calc(100vh - 220px);
+    min-height: 420px;
+  }
+  .md-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+  .tabs {
+    display: inline-flex;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .tab {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-mono);
+    background: var(--color-surface);
+    color: var(--color-text-mute);
+    border: none;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+  }
+  .tab.active {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+  .actions { display: flex; gap: var(--space-2); }
+  .action {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-size-sm);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius);
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    cursor: pointer;
+    transition: opacity var(--transition);
+  }
+  .action:hover { opacity: 0.85; }
+  .action.ghost {
+    background: transparent;
+    color: var(--color-text);
+  }
+
+  .md-pane {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    min-height: 0;
+  }
+  .md-input-wrap, .md-output-wrap {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-surface);
+    min-height: 0;
+  }
+  .pane-label {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+    border-bottom: 1px solid var(--color-border);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .md-input {
+    flex: 1;
+    padding: var(--space-4);
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    color: var(--color-text);
+    background: transparent;
+  }
+  .md-output {
+    flex: 1;
+    padding: var(--space-6);
+    overflow-y: auto;
+    font-size: var(--font-size-base);
+    line-height: 1.7;
+  }
+  .md-output :global(*:first-child) { margin-top: 0; }
+  .md-source {
+    flex: 1;
+    margin: 0;
+    padding: var(--space-4);
+    overflow: auto;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    color: var(--color-text);
+    background: transparent;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .md-hint {
+    font-size: var(--font-size-xs);
+    text-align: center;
+  }
+
+  /* 移动端：上下分栏 */
+  @media (max-width: 700px) {
+    .md-pane { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+    .md-tool { height: auto; min-height: 600px; }
+  }
+</style>
+
+<script>
+  import { marked } from 'marked';
+
+  const input = document.getElementById('md-input') as HTMLTextAreaElement;
+  const preview = document.getElementById('md-preview');
+  const source = document.getElementById('md-source');
+  const sourceCode = source?.querySelector('code');
+  const tabs = document.querySelectorAll<HTMLButtonElement>('.tab');
+  const outputWrap = document.querySelector('.md-output-wrap');
+  const outputLabel = document.querySelector('[data-output-label]');
+  const STORAGE_KEY = 'md-tool-content';
+  const DEFAULT_MD = `# 欢迎使用 Markdown 转换器
+
+左侧写 **Markdown**，右侧实时显示结果。
+
+## 支持的语法
+
+- **粗体**、*斜体*、~~删除线~~
+- [链接](https://astro.build)
+- \`行内代码\`
+
+\`\`\`js
+// 代码块
+function hello() {
+  console.log("Hello, world!");
+}
+\`\`\`
+
+> 引用块：简洁即美。
+
+1. 有序列表
+2. 第二项
+
+| 工具 | 状态 |
+|------|------|
+| 转换器 | ✅ |
+`;
+
+  function render() {
+    const md = input.value;
+    const html = marked.parse(md, { async: false }) as string;
+    if (preview) preview.innerHTML = html;
+    if (sourceCode) sourceCode.textContent = html;
+    // 自动保存（防抖）
+    clearTimeout((window as any).__mdSaveTimer);
+    (window as any).__mdSaveTimer = setTimeout(() => {
+      try { localStorage.setItem(STORAGE_KEY, md); } catch (e) {}
+    }, 400);
+  }
+
+  function setMode(mode: 'preview' | 'source') {
+    tabs.forEach((t) => {
+      const active = t.dataset.mode === mode;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-selected', String(active));
+    });
+    if (mode === 'preview') {
+      preview?.removeAttribute('hidden');
+      source?.setAttribute('hidden', '');
+      outputWrap?.classList.add('prose');
+    } else {
+      preview?.setAttribute('hidden', '');
+      source?.removeAttribute('hidden');
+      outputWrap?.classList.remove('prose');
+    }
+    if (outputLabel) outputLabel.textContent = mode === 'preview' ? '预览' : 'HTML 源码';
+  }
+
+  // 初始化内容：localStorage 或默认示例
+  try {
+    input.value = localStorage.getItem(STORAGE_KEY) ?? DEFAULT_MD;
+  } catch {
+    input.value = DEFAULT_MD;
+  }
+
+  input.addEventListener('input', render);
+  tabs.forEach((t) => t.addEventListener('click', () => setMode(t.dataset.mode as 'preview' | 'source')));
+
+  // 复制 HTML
+  document.querySelector('[data-action="copy"]')?.addEventListener('click', async () => {
+    const html = sourceCode?.textContent ?? '';
+    try {
+      await navigator.clipboard.writeText(html);
+      flashButton('[data-action="copy"]', '已复制 ✓');
+    } catch {
+      flashButton('[data-action="copy"]', '复制失败');
+    }
+  });
+  // 清空
+  document.querySelector('[data-action="clear"]')?.addEventListener('click', () => {
+    input.value = '';
+    render();
+    input.focus();
+  });
+
+  function flashButton(sel: string, text: string) {
+    const btn = document.querySelector(sel) as HTMLButtonElement;
+    if (!btn) return;
+    const original = btn.textContent;
+    btn.textContent = text;
+    setTimeout(() => { btn.textContent = original; }, 1400);
+  }
+
+  render();
+</script>

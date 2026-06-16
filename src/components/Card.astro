@@ -16,6 +16,7 @@ interface CardEntry {
     tags?: string[];
     url?: string;       // 外部试用链接（工具/产品）
     repo?: string;      // 源码仓库
+    app?: boolean;      // 站内交互工具
     status?: string;    // 产品状态（如 beta/live）
   };
 }
@@ -31,14 +32,17 @@ const tags = normalizeTags(data.tags);
 // 仅博客显示阅读时长（工具/产品无意义）
 const minutes = collection === 'blog' && body ? readingTime(body) : 0;
 
-// 有外部 url 的（工具/产品）整卡跳外链；否则跳详情页
+// app 工具 → 跳交互页；有外部 url → 跳外链；否则跳详情页
 const isExternal = Boolean(data.url);
-const href = isExternal
+const isApp = collection === 'tools' && data.app === true;
+const href = isApp
+  ? `/tools/${slug}/app`
+  : isExternal
   ? data.url!
   : `/${collection === 'blog' ? 'blog' : collection}/${slug}`;
 ---
 <article class="card">
-  <a href={href} class="card-link" {...(isExternal ? { target: '_blank', rel: 'noopener' } : {})}>
+  <a href={href} class="card-link" {...(isExternal ? { target: '_blank', rel: 'noopener' } : {})} data-card-link>
     <div class="card-meta">
       <FormattedDate date={data.date} />
       {minutes > 0 && <span class="dot-sep">·</span>}
