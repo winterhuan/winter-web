@@ -1,35 +1,40 @@
 ---
 // Focus 专注计时器 —— 番茄工作法
-// 计时循环 + 本地统计 + 声音/环境音 + 任务清单
 ---
 <div class="focus-tool">
-  <!-- 倒计时显示 -->
-  <div class="focus-display">
-    <div class="phase-label" data-phase-label>准备开始</div>
-    <div class="time" data-time>25:00</div>
+  <!-- 圆形进度环 + 倒计时 -->
+  <div class="focus-ring-wrap">
+    <svg class="focus-ring" viewBox="0 0 200 200" data-ring>
+      <circle class="ring-bg" cx="100" cy="100" r="90" />
+      <circle class="ring-fill" cx="100" cy="100" r="90" data-ring-fill />
+    </svg>
+    <div class="focus-ring-inner">
+      <div class="phase-label" data-phase-label>准备开始</div>
+      <div class="time" data-time>25:00</div>
+    </div>
   </div>
 
   <!-- 控制按钮 -->
   <div class="focus-controls">
-    <button class="btn primary" data-action="start">开始</button>
-    <button class="btn" data-action="pause" hidden>暂停</button>
-    <button class="btn ghost" data-action="skip">跳过</button>
-    <button class="btn ghost" data-action="reset">重置</button>
+    <button class="btn primary" data-action="start">▶ 开始</button>
+    <button class="btn" data-action="pause" hidden>⏸ 暂停</button>
+    <button class="btn ghost" data-action="skip">⏭ 跳过</button>
+    <button class="btn ghost" data-action="reset">↺ 重置</button>
   </div>
 
   <!-- 任务清单 -->
-  <div class="focus-tasks">
+  <div class="focus-section">
     <form class="task-form" data-task-form>
       <input class="task-input" data-task-input placeholder="当前要专注的任务…" />
-      <button class="btn primary" type="submit">添加</button>
+      <button class="btn" type="submit">添加</button>
     </form>
     <ul class="task-list" data-task-list></ul>
   </div>
 
-  <!-- 声音控制 -->
-  <div class="focus-audio">
+  <!-- 环境音 -->
+  <div class="focus-section focus-audio">
     <label class="ambient-toggle">
-      <span>环境音</span>
+      <span class="ambient-icon">🔇</span>
       <select data-ambient>
         <option value="none">关闭</option>
         <option value="white">白噪音</option>
@@ -38,14 +43,14 @@
     </label>
   </div>
 
-  <!-- 统计概览 -->
-  <div class="focus-stats">
+  <!-- 统计 -->
+  <div class="focus-section focus-stats">
     <div class="stats-summary">
       <div class="stat"><span class="stat-num" data-stat-today>0</span><span class="stat-label">今日番茄</span></div>
-      <div class="stat"><span class="stat-num" data-stat-week>0</span><span class="stat-label">最近7天</span></div>
-      <div class="stat"><span class="stat-num" data-stat-total>0h</span><span class="stat-label">累计专注</span></div>
+      <div class="stat"><span class="stat-num" data-stat-week>0</span><span class="stat-label">7天</span></div>
+      <div class="stat"><span class="stat-num" data-stat-total>0h</span><span class="stat-label">累计</span></div>
     </div>
-    <div class="chart-heading">每日番茄数</div>
+    <div class="chart-heading">最近 7 天</div>
     <div class="stats-chart" data-stats-chart></div>
   </div>
 </div>
@@ -55,29 +60,76 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-8);
-    padding: var(--space-8) 0;
+    gap: var(--space-6);
+    padding: var(--space-6) 0 var(--space-12);
+    max-width: 480px;
+    margin: 0 auto;
   }
-  .focus-display {
+
+  /* ─── 圆形进度环 ─────────────────────────────────────────── */
+  .focus-ring-wrap {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: var(--space-4) auto;
+  }
+  .focus-ring {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .ring-bg {
+    fill: none;
+    stroke: var(--color-border);
+    stroke-width: 8;
+  }
+  .ring-fill {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 565.486; /* 2 * π * 90 ≈ 565.486 */
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.3s linear, stroke 0.5s;
+  }
+  .focus-ring-inner {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-3);
+    justify-content: center;
+    gap: var(--space-1);
   }
   .phase-label {
     font-family: var(--font-mono);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     color: var(--color-text-mute);
+    transition: color 0.5s;
   }
   .time {
     font-family: var(--font-mono);
-    font-size: 6rem;
+    font-size: 3.25rem;
     font-weight: 700;
     line-height: 1;
     font-variant-numeric: tabular-nums;
+    transition: color 0.5s;
   }
+
+  /* 阶段色彩：idle=默认, focus=暖橙, break=青绿 */
+  .focus-tool[data-phase="focus"] .ring-fill { stroke: #f59e0b; }
+  .focus-tool[data-phase="focus"] .phase-label { color: #f59e0b; }
+  .focus-tool[data-phase="focus"] .time { color: #f59e0b; }
+  .focus-tool[data-phase="short-break"] .ring-fill,
+  .focus-tool[data-phase="long-break"] .ring-fill { stroke: #14b8a6; }
+  .focus-tool[data-phase="short-break"] .phase-label,
+  .focus-tool[data-phase="long-break"] .phase-label { color: #14b8a6; }
+  .focus-tool[data-phase="short-break"] .time,
+  .focus-tool[data-phase="long-break"] .time { color: #14b8a6; }
+
+  /* ─── 控制按钮 ───────────────────────────────────────────── */
   .focus-controls {
     display: flex;
     gap: var(--space-3);
@@ -85,45 +137,49 @@
     justify-content: center;
   }
   .btn {
-    padding: var(--space-3) var(--space-6);
-    font-size: var(--font-size-base);
-    border: 1px solid var(--color-border-strong);
-    border-radius: var(--radius);
-    background: transparent;
-    color: var(--color-text);
-    cursor: pointer;
-    transition: opacity var(--transition), background var(--transition);
-  }
-  .btn:hover { opacity: 0.85; }
-  .btn.primary {
-    background: var(--color-accent);
-    color: var(--color-accent-contrast);
-    border-color: var(--color-accent);
-  }
-  .btn.ghost { opacity: 0.7; }
-  .btn[hidden] { display: none; }
-  .focus-audio { margin-top: var(--space-4); }
-  .ambient-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
+    padding: var(--space-2) var(--space-5);
     font-size: var(--font-size-sm);
-    color: var(--color-text-mute);
-  }
-  .ambient-toggle select {
-    padding: var(--space-1) var(--space-2);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     background: var(--color-surface);
     color: var(--color-text);
+    cursor: pointer;
+    transition: all var(--transition);
     font-family: var(--font-mono);
-    font-size: var(--font-size-xs);
   }
-  .focus-tasks {
+  .btn:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-bg);
+  }
+  .btn.primary {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    border-color: var(--color-accent);
+    padding-inline: var(--space-8);
+    font-weight: 600;
+  }
+  .btn.primary:hover {
+    opacity: 0.88;
+    background: var(--color-accent);
+  }
+  .btn.ghost {
+    border-color: transparent;
+    background: transparent;
+    opacity: 0.55;
+  }
+  .btn.ghost:hover { opacity: 0.85; border-color: var(--color-border); }
+  .btn[hidden] { display: none; }
+
+  /* ─── 公用区块卡片 ───────────────────────────────────────── */
+  .focus-section {
     width: 100%;
-    max-width: 500px;
-    margin-top: var(--space-4);
+    padding: var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
   }
+
+  /* ─── 任务清单 ───────────────────────────────────────────── */
   .task-form {
     display: flex;
     gap: var(--space-2);
@@ -134,54 +190,81 @@
     padding: var(--space-2) var(--space-3);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    background: var(--color-surface);
+    background: var(--color-bg);
     color: var(--color-text);
     font-size: var(--font-size-sm);
     outline: none;
+    transition: border-color var(--transition);
   }
-  .task-input:focus { border-color: var(--color-border-strong); }
+  .task-input:focus { border-color: var(--color-accent); }
   .task-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
   .task-item {
     display: flex;
     align-items: center;
     gap: var(--space-3);
     padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    cursor: pointer;
+    transition: background var(--transition), box-shadow var(--transition);
+    font-size: var(--font-size-sm);
+  }
+  .task-item:hover { background: var(--color-surface); }
+  .task-item.active {
+    box-shadow: inset 2px 0 0 var(--color-accent);
+    background: var(--color-surface);
+  }
+  .task-item.done .task-title { text-decoration: line-through; opacity: 0.35; }
+  .task-title { flex: 1; }
+  .task-pomos {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-mute);
+    white-space: nowrap;
+  }
+
+  /* ─── 环境音 ─────────────────────────────────────────────── */
+  .focus-audio { text-align: center; }
+  .ambient-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-mute);
+  }
+  .ambient-icon { font-size: var(--font-size-lg); }
+  .ambient-toggle select {
+    padding: var(--space-1) var(--space-2);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     background: var(--color-surface);
-    cursor: pointer;
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
   }
-  .task-item.active { border-color: var(--color-accent); }
-  .task-item.done .task-title { text-decoration: line-through; opacity: 0.5; }
-  .task-title { flex: 1; font-size: var(--font-size-sm); }
-  .task-pomos { font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-mute); }
-  .focus-stats {
-    width: 100%;
-    max-width: 600px;
-    margin-top: var(--space-6);
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--color-border);
-  }
+
+  /* ─── 统计 ───────────────────────────────────────────────── */
+  .focus-stats { text-align: center; }
   .stats-summary {
     display: flex;
     justify-content: space-around;
-    text-align: center;
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-5);
   }
   .stat { display: flex; flex-direction: column; gap: var(--space-1); }
   .stat-num { font-size: var(--font-size-2xl); font-weight: 700; font-variant-numeric: tabular-nums; }
-  .stat-label { font-size: var(--font-size-xs); color: var(--color-text-mute); }
+  .stat-label { font-size: var(--font-size-xs); color: var(--color-text-mute); font-family: var(--font-mono); }
   .chart-heading {
     font-size: var(--font-size-xs);
     color: var(--color-text-mute);
-    text-align: center;
+    font-family: var(--font-mono);
     margin-bottom: var(--space-3);
   }
   .stats-chart {
     display: flex;
     align-items: flex-end;
     gap: var(--space-2);
-    height: 80px;
+    height: 70px;
+    padding-top: var(--space-2);
   }
   .chart-bar {
     flex: 1;
@@ -193,13 +276,22 @@
   .chart-bar-fill {
     width: 100%;
     background: var(--color-accent);
-    border-radius: var(--radius) var(--radius) 0 0;
+    border-radius: 3px 3px 0 0;
     min-height: 2px;
+    transition: height 0.4s ease;
+    opacity: 0.7;
   }
   .chart-bar-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: var(--color-text-mute);
     font-family: var(--font-mono);
+  }
+
+  @media (max-width: 500px) {
+    .focus-ring-wrap { width: 160px; height: 160px; }
+    .ring-bg, .ring-fill { stroke-width: 6; }
+    .ring-fill { stroke-dasharray: 502.654; } /* 2*π*80 */
+    .time { font-size: 2.5rem; }
   }
 </style>
 
@@ -208,39 +300,34 @@
     DEFAULT_SETTINGS, defaultTimerState, phaseDurationMs, nextPhase,
     type TimerState, type Settings, type Phase,
   } from '../../lib/timer-engine';
+  import { AudioKit } from '../../lib/audio';
 
   const PHASE_LABELS: Record<Phase, string> = {
-    'idle': '准备开始',
-    'focus': '专注中',
-    'short-break': '短休息',
-    'long-break': '长休息',
+    'idle': '准备开始', 'focus': '专注中',
+    'short-break': '短休息', 'long-break': '长休息',
   };
+
+  const RING_CIRCUMFERENCE = 565.486; // 2*π*90
 
   const SETTINGS_KEY = 'focus-settings';
   const STATE_KEY = 'focus-timer';
+  const STATS_KEY = 'focus-stats';
+  const TASKS_KEY = 'focus-tasks';
 
   function loadSettings(): Settings {
-    try {
-      const raw = localStorage.getItem(SETTINGS_KEY);
-      if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-    } catch (e) {}
+    try { const r = localStorage.getItem(SETTINGS_KEY); if (r) return { ...DEFAULT_SETTINGS, ...JSON.parse(r) }; } catch (e) {}
     return { ...DEFAULT_SETTINGS };
   }
-
   function loadState(): TimerState {
-    try {
-      const raw = localStorage.getItem(STATE_KEY);
-      if (raw) return { ...defaultTimerState(), ...JSON.parse(raw) };
-    } catch (e) {}
+    try { const r = localStorage.getItem(STATE_KEY); if (r) return { ...defaultTimerState(), ...JSON.parse(r) }; } catch (e) {}
     return defaultTimerState();
   }
+  function saveState(s: TimerState) { try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch (e) {} }
 
-  function saveState(s: TimerState) {
-    try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch (e) {}
-  }
-
+  const toolEl = document.querySelector('.focus-tool') as HTMLElement;
   const timeEl = document.querySelector('[data-time]') as HTMLElement;
   const phaseLabelEl = document.querySelector('[data-phase-label]') as HTMLElement;
+  const ringFillEl = document.querySelector('[data-ring-fill]') as SVGCircleElement;
   const startBtn = document.querySelector('[data-action="start"]') as HTMLButtonElement;
   const pauseBtn = document.querySelector('[data-action="pause"]') as HTMLButtonElement;
   const skipBtn = document.querySelector('[data-action="skip"]') as HTMLButtonElement;
@@ -249,47 +336,47 @@
   const settings = loadSettings();
   let state = loadState();
   let rafId: number | null = null;
+  const audio = new AudioKit();
 
-  // ─── 时间格式化 ───────────────────────────────────────────
   function formatMs(ms: number): string {
-    const totalSec = Math.max(0, Math.ceil(ms / 1000));
-    const m = Math.floor(totalSec / 60);
-    const s = totalSec % 60;
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   }
-
-  // ─── 剩余时间 ─────────────────────────────────────────────
   function remainingMs(): number {
     if (state.endTime != null) return Math.max(0, state.endTime - Date.now());
     if (state.pausedRemaining != null) return state.pausedRemaining;
     if (state.phase === 'idle') return phaseDurationMs('focus', settings);
     return 0;
   }
+  function progressFraction(): number {
+    if (state.phase === 'idle') return 1;
+    const total = phaseDurationMs(state.phase, settings);
+    if (total === 0) return 1;
+    return remainingMs() / total;
+  }
 
-  // ─── 渲染 ─────────────────────────────────────────────────
   function render() {
     const rem = remainingMs();
-    if (timeEl) timeEl.textContent = formatMs(rem);
-    if (phaseLabelEl) phaseLabelEl.textContent = PHASE_LABELS[state.phase];
+    const frac = progressFraction();
+    timeEl.textContent = formatMs(rem);
+    phaseLabelEl.textContent = PHASE_LABELS[state.phase];
+    if (ringFillEl) ringFillEl.style.strokeDashoffset = String(RING_CIRCUMFERENCE * (1 - frac));
+    if (toolEl) toolEl.dataset.phase = state.phase;
     const running = state.endTime != null;
     startBtn.hidden = running;
     pauseBtn.hidden = !running;
-    document.title = `${formatMs(rem)} · Focus`;
+    document.title = `${formatMs(rem)} · ${PHASE_LABELS[state.phase]}`;
   }
 
-  // ─── 开始 ─────────────────────────────────────────────────
   function start() {
     audio.ensureContext();
     if (state.phase === 'idle') state.phase = 'focus';
-    const rem = remainingMs();
-    state.endTime = Date.now() + rem;
+    state.endTime = Date.now() + remainingMs();
     state.pausedRemaining = null;
     saveState(state);
     render();
     loop();
   }
-
-  // ─── 暂停 ─────────────────────────────────────────────────
   function pause() {
     if (state.endTime == null) return;
     state.pausedRemaining = state.endTime - Date.now();
@@ -299,7 +386,6 @@
     stopLoop();
   }
 
-  // ─── 完成当前阶段，进入下一阶段 ───────────────────────────
   function completePhase() {
     stopLoop();
     const wasFocus = state.phase === 'focus';
@@ -313,18 +399,11 @@
     state.endTime = Date.now() + phaseDurationMs(phase, settings);
     state.pausedRemaining = null;
     saveState(state);
-    playChimeIfOn();
+    if (settings.soundOn) audio.playChime();
     render();
     if (state.phase !== 'idle') loop();
   }
-
-  // ─── 跳过 ─────────────────────────────────────────────────
-  function skip() {
-    if (state.phase === 'idle') return;
-    completePhase();
-  }
-
-  // ─── 重置 ─────────────────────────────────────────────────
+  function skip() { if (state.phase !== 'idle') completePhase(); }
   function reset() {
     stopLoop();
     state = defaultTimerState();
@@ -332,199 +411,129 @@
     render();
   }
 
-  // ─── RAF 循环 ─────────────────────────────────────────────
   function loop() {
     stopLoop();
     const tick = () => {
-      if (state.endTime != null && Date.now() >= state.endTime) {
-        completePhase();
-        return;
-      }
+      if (state.endTime != null && Date.now() >= state.endTime) { completePhase(); return; }
       render();
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
   }
-  function stopLoop() {
-    if (rafId != null) cancelAnimationFrame(rafId);
-    rafId = null;
-  }
+  function stopLoop() { if (rafId != null) { cancelAnimationFrame(rafId); rafId = null; } }
 
-  // ─── 后台切回重绘 ─────────────────────────────────────────
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && state.endTime != null) {
-      if (Date.now() >= state.endTime) completePhase();
-      else render();
+      if (Date.now() >= state.endTime) completePhase(); else render();
     }
   });
 
-  // 占位（Task 8/9/10 替换）—— 已提前 import AudioKit 以免后续改动大
-  import { AudioKit } from '../../lib/audio';
-  const audio = new AudioKit();
-
-  // ─── 统计（按天聚合）───────────────────────────────────────
-  const STATS_KEY = 'focus-stats';
+  // ─── 统计 ─────────────────────────────────────────────────
   interface DayStat { pomodoros: number; focusMs: number; }
-  type Stats = Record<string, DayStat>; // key: YYYY-MM-DD
-
-  function loadStats(): Stats {
-    try {
-      const raw = localStorage.getItem(STATS_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return {};
-  }
-  function saveStats(s: Stats) {
-    try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch (e) {}
-  }
-  function todayKey(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }
+  type Stats = Record<string, DayStat>;
+  function loadStats(): Stats { try { const r = localStorage.getItem(STATS_KEY); if (r) return JSON.parse(r); } catch (e) {} return {}; }
+  function saveStats(s: Stats) { try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch (e) {} }
+  function todayKey(): string { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
   function recordFocusComplete() {
     const stats = loadStats();
     const key = todayKey();
     const day = stats[key] || { pomodoros: 0, focusMs: 0 };
-    day.pomodoros += 1;
-    day.focusMs += settings.focusMin * 60_000;
-    stats[key] = day;
-    saveStats(stats);
+    day.pomodoros += 1; day.focusMs += settings.focusMin * 60_000;
+    stats[key] = day; saveStats(stats);
     renderStats();
   }
 
   function renderStats() {
     const stats = loadStats();
     const today = stats[todayKey()]?.pomodoros || 0;
-
-    // 最近 7 天
     const days: { key: string; label: string; pomodoros: number }[] = [];
-    let weekTotal = 0;
-    let grandTotalMs = 0;
+    let weekTotal = 0, grandTotalMs = 0;
     const now = new Date();
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(now.getDate() - i);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const d = new Date(now); d.setDate(now.getDate() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       const p = stats[key]?.pomodoros || 0;
-      const idx = days.length; // 0=最早, 6=今天
-      const label = idx === 0 || idx === 6
-        ? `${d.getMonth() + 1}/${d.getDate()}`
-        : String(d.getDate());
+      const idx = days.length;
+      const label = idx === 0 || idx === 6 ? `${d.getMonth()+1}/${d.getDate()}` : String(d.getDate());
       days.push({ key, label, pomodoros: p });
       weekTotal += p;
     }
-    Object.values(stats).forEach((d) => { grandTotalMs += d.focusMs; });
-
-    const setNum = (sel: string, val: string) => {
-      const el = document.querySelector(sel);
-      if (el) el.textContent = val;
-    };
+    Object.values(stats).forEach(d => { grandTotalMs += d.focusMs; });
+    const setNum = (sel: string, val: string) => { const el = document.querySelector(sel); if (el) el.textContent = val; };
     setNum('[data-stat-today]', String(today));
     setNum('[data-stat-week]', String(weekTotal));
     setNum('[data-stat-total]', `${(grandTotalMs / 3600000).toFixed(1)}h`);
-
     const chartEl = document.querySelector('[data-stats-chart]');
     if (chartEl) {
-      const max = Math.max(1, ...days.map((d) => d.pomodoros));
-      chartEl.innerHTML = days.map((d) => {
-        const h = Math.round((d.pomodoros / max) * 70);
-        return `<div class="chart-bar">
-          <div class="chart-bar-fill" style="height:${h}px"></div>
-          <div class="chart-bar-label">${d.label}</div>
-        </div>`;
+      const max = Math.max(1, ...days.map(d => d.pomodoros));
+      chartEl.innerHTML = days.map(d => {
+        const h = Math.round(d.pomodoros / max * 58);
+        return `<div class="chart-bar"><div class="chart-bar-fill" style="height:${h}px"></div><div class="chart-bar-label">${d.label}</div></div>`;
       }).join('');
     }
   }
+  renderStats();
 
   // ─── 任务清单 ─────────────────────────────────────────────
-  const TASKS_KEY = 'focus-tasks';
   interface Task { id: string; title: string; pomodoros: number; done: boolean; createdAt: number; }
-  function loadTasks(): Task[] {
-    try { const raw = localStorage.getItem(TASKS_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
-    return [];
-  }
-  function saveTasks(tasks: Task[]) {
-    try { localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); } catch (e) {}
-  }
-
+  function loadTasks(): Task[] { try { const r = localStorage.getItem(TASKS_KEY); if (r) return JSON.parse(r); } catch (e) {} return []; }
+  function saveTasks(tasks: Task[]) { try { localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); } catch (e) {} }
   const taskListEl = document.querySelector('[data-task-list]') as HTMLElement;
   const taskForm = document.querySelector('[data-task-form]') as HTMLFormElement;
   const taskInput = document.querySelector('[data-task-input]') as HTMLInputElement;
-
-  function escapeHtml(s: string): string {
-    return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
-  }
+  function esc(s: string) { return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]!)); }
 
   function renderTasks() {
     if (!taskListEl) return;
     const tasks = loadTasks();
-    taskListEl.innerHTML = tasks.map((t) => `
+    taskListEl.innerHTML = tasks.map(t => `
       <li class="task-item${t.id === state.currentTaskId ? ' active' : ''}${t.done ? ' done' : ''}" data-task-id="${t.id}">
         <input type="checkbox" data-task-toggle="${t.id}" ${t.done ? 'checked' : ''} />
-        <span class="task-title">${escapeHtml(t.title)}</span>
+        <span class="task-title">${esc(t.title)}</span>
         <span class="task-pomos">🍅 ${t.pomodoros}</span>
         <button class="btn ghost" data-task-delete="${t.id}" type="button">✕</button>
-      </li>
-    `).join('');
+      </li>`).join('');
   }
 
-  taskForm.addEventListener('submit', (e) => {
+  taskForm.addEventListener('submit', e => {
     e.preventDefault();
     const title = taskInput.value.trim();
     if (!title) return;
     const tasks = loadTasks();
     tasks.push({ id: crypto.randomUUID(), title, pomodoros: 0, done: false, createdAt: Date.now() });
-    saveTasks(tasks);
-    taskInput.value = '';
-    renderTasks();
+    saveTasks(tasks); taskInput.value = ''; renderTasks();
   });
 
-  taskListEl.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    const toggle = target.closest('[data-task-toggle]') as HTMLInputElement | null;
-    const del = target.closest('[data-task-delete]');
-    const item = target.closest('[data-task-id]') as HTMLElement | null;
+  taskListEl.addEventListener('click', e => {
+    const t = e.target as HTMLElement;
+    const item = t.closest('[data-task-id]') as HTMLElement | null;
     if (!item) return;
     const id = item.dataset.taskId!;
     const tasks = loadTasks();
-
-    if (del) {
-      const filtered = tasks.filter((t) => t.id !== id);
-      saveTasks(filtered);
+    if (t.closest('[data-task-delete]')) {
+      const f = tasks.filter(x => x.id !== id);
+      saveTasks(f);
       if (state.currentTaskId === id) { state.currentTaskId = null; saveState(state); }
-      renderTasks();
-      return;
+      renderTasks(); return;
     }
-    if (toggle) {
-      const t = tasks.find((x) => x.id === id);
-      if (t) { t.done = toggle.checked; saveTasks(tasks); }
-      renderTasks();
-      return;
+    if (t.closest('[data-task-toggle]')) {
+      const m = tasks.find(x => x.id === id); if (m) { m.done = (t as HTMLInputElement).checked; saveTasks(tasks); }
+      renderTasks(); return;
     }
-    // 点击行 = 选为当前任务
     state.currentTaskId = state.currentTaskId === id ? null : id;
-    saveState(state);
-    renderTasks();
+    saveState(state); renderTasks();
   });
 
   function recordFocusForTask() {
-    if (state.currentTaskId) {
-      const tasks = loadTasks();
-      const t = tasks.find((x) => x.id === state.currentTaskId);
-      if (t) { t.pomodoros += 1; saveTasks(tasks); renderTasks(); }
-    }
+    if (!state.currentTaskId) return;
+    const tasks = loadTasks();
+    const m = tasks.find(x => x.id === state.currentTaskId);
+    if (m) { m.pomodoros += 1; saveTasks(tasks); renderTasks(); }
   }
-
   renderTasks();
 
-  function playChimeIfOn() {
-    if (settings.soundOn) audio.playChime();
-  }
-
-  renderStats(); // 初始渲染
-
-  // ─── 环境音切换 ───────────────────────────────────────────
+  // ─── 环境音 ───────────────────────────────────────────────
   const ambientSelect = document.querySelector('[data-ambient]') as HTMLSelectElement;
   if (ambientSelect) {
     ambientSelect.value = settings.ambient;
@@ -537,11 +546,10 @@
     });
   }
 
-  // 绑定
+  // ─── 绑定 ─────────────────────────────────────────────────
   startBtn.addEventListener('click', start);
   pauseBtn.addEventListener('click', pause);
   skipBtn.addEventListener('click', skip);
   resetBtn.addEventListener('click', reset);
-
   render();
 </script>
