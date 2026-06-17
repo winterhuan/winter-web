@@ -17,6 +17,15 @@
     <button class="btn ghost" data-action="reset">重置</button>
   </div>
 
+  <!-- 任务清单 -->
+  <div class="focus-tasks">
+    <form class="task-form" data-task-form>
+      <input class="task-input" data-task-input placeholder="当前要专注的任务…" />
+      <button class="btn primary" type="submit">添加</button>
+    </form>
+    <ul class="task-list" data-task-list></ul>
+  </div>
+
   <!-- 声音控制 -->
   <div class="focus-audio">
     <label class="ambient-toggle">
@@ -109,6 +118,42 @@
     font-family: var(--font-mono);
     font-size: var(--font-size-xs);
   }
+  .focus-tasks {
+    width: 100%;
+    max-width: 500px;
+    margin-top: var(--space-4);
+  }
+  .task-form {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+  .task-input {
+    flex: 1;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    outline: none;
+  }
+  .task-input:focus { border-color: var(--color-border-strong); }
+  .task-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    cursor: pointer;
+  }
+  .task-item.active { border-color: var(--color-accent); }
+  .task-item.done .task-title { text-decoration: line-through; opacity: 0.5; }
+  .task-title { flex: 1; font-size: var(--font-size-sm); }
+  .task-pomos { font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-mute); }
   .focus-stats {
     width: 100%;
     max-width: 600px;
@@ -381,11 +426,90 @@
     }
   }
 
+  // ─── 任务清单 ─────────────────────────────────────────────
+  const TASKS_KEY = 'focus-tasks';
+  interface Task { id: string; title: string; pomodoros: number; done: boolean; createdAt: number; }
+  function loadTasks(): Task[] {
+    try { const raw = localStorage.getItem(TASKS_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+    return [];
+  }
+  function saveTasks(tasks: Task[]) {
+    try { localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); } catch (e) {}
+  }
+
+  const taskListEl = document.querySelector('[data-task-list]') as HTMLElement;
+  const taskForm = document.querySelector('[data-task-form]') as HTMLFormElement;
+  const taskInput = document.querySelector('[data-task-input]') as HTMLInputElement;
+
+  function escapeHtml(s: string): string {
+    return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+  }
+
+  function renderTasks() {
+    if (!taskListEl) return;
+    const tasks = loadTasks();
+    taskListEl.innerHTML = tasks.map((t) => `
+      <li class="task-item${t.id === state.currentTaskId ? ' active' : ''}${t.done ? ' done' : ''}" data-task-id="${t.id}">
+        <input type="checkbox" data-task-toggle="${t.id}" ${t.done ? 'checked' : ''} />
+        <span class="task-title">${escapeHtml(t.title)}</span>
+        <span class="task-pomos">🍅 ${t.pomodoros}</span>
+        <button class="btn ghost" data-task-delete="${t.id}" type="button">✕</button>
+      </li>
+    `).join('');
+  }
+
+  taskForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const title = taskInput.value.trim();
+    if (!title) return;
+    const tasks = loadTasks();
+    tasks.push({ id: crypto.randomUUID(), title, pomodoros: 0, done: false, createdAt: Date.now() });
+    saveTasks(tasks);
+    taskInput.value = '';
+    renderTasks();
+  });
+
+  taskListEl.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const toggle = target.closest('[data-task-toggle]') as HTMLInputElement | null;
+    const del = target.closest('[data-task-delete]');
+    const item = target.closest('[data-task-id]') as HTMLElement | null;
+    if (!item) return;
+    const id = item.dataset.taskId!;
+    const tasks = loadTasks();
+
+    if (del) {
+      const filtered = tasks.filter((t) => t.id !== id);
+      saveTasks(filtered);
+      if (state.currentTaskId === id) { state.currentTaskId = null; saveState(state); }
+      renderTasks();
+      return;
+    }
+    if (toggle) {
+      const t = tasks.find((x) => x.id === id);
+      if (t) { t.done = toggle.checked; saveTasks(tasks); }
+      renderTasks();
+      return;
+    }
+    // 点击行 = 选为当前任务
+    state.currentTaskId = state.currentTaskId === id ? null : id;
+    saveState(state);
+    renderTasks();
+  });
+
+  function recordFocusForTask() {
+    if (state.currentTaskId) {
+      const tasks = loadTasks();
+      const t = tasks.find((x) => x.id === state.currentTaskId);
+      if (t) { t.pomodoros += 1; saveTasks(tasks); renderTasks(); }
+    }
+  }
+
+  renderTasks();
+
   function playChimeIfOn() {
     if (settings.soundOn) audio.playChime();
   }
-
-  function recordFocusForTask() {}
 
   renderStats(); // 初始渲染
 
