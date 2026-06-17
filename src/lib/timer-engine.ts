@@ -38,3 +38,39 @@ export function defaultTimerState(): TimerState {
     currentTaskId: null,
   };
 }
+
+// ─── 阶段时长 ───────────────────────────────────────────────
+
+/** 给定阶段与设置，返回该阶段应持续的毫秒数 */
+export function phaseDurationMs(phase: Phase, s: Settings): number {
+  switch (phase) {
+    case 'focus': return s.focusMin * 60_000;
+    case 'short-break': return s.shortBreakMin * 60_000;
+    case 'long-break': return s.longBreakMin * 60_000;
+    default: return 0; // idle
+  }
+}
+
+// ─── 阶段流转 ───────────────────────────────────────────────
+
+/**
+ * 计算当前阶段结束后的下一步。
+ * @param current   当前阶段
+ * @param completedFocus 已完成 focus 数（即将结束的 focus 计入前）
+ * @param s         设置
+ * @returns 下一个 phase；focusCompleted 表示「刚结束的是否是一个 focus」
+ *          调用方据此把 completedFocus +1
+ */
+export function nextPhase(
+  current: Phase,
+  completedFocus: number,
+  s: Settings,
+): { phase: Phase; focusCompleted: boolean } {
+  if (current === 'focus') {
+    const willBeCompleted = completedFocus + 1;
+    const isLongBreak = willBeCompleted % s.longBreakInterval === 0;
+    return { phase: isLongBreak ? 'long-break' : 'short-break', focusCompleted: true };
+  }
+  // 任意 break 结束 → 回到 focus
+  return { phase: 'focus', focusCompleted: false };
+}
