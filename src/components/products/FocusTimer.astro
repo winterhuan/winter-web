@@ -226,31 +226,135 @@
     color: var(--color-accent);
     background: var(--color-bg);
   }
-  .task-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+
+  /* 任务列表 */
+  .task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
   .task-item {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius);
-    background: var(--color-bg);
-    cursor: pointer;
-    transition: background var(--transition), box-shadow var(--transition);
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+    transition: background 0.15s, border-color 0.15s;
     font-size: var(--font-size-sm);
+    cursor: default;
   }
+  .task-item:last-child { border-bottom: none; }
   .task-item:hover { background: var(--color-surface); }
-  .task-item.active {
-    box-shadow: inset 2px 0 0 var(--color-accent);
-    background: var(--color-surface);
+
+  /* 焦点任务高亮 */
+  .task-item.is-focused {
+    background: linear-gradient(90deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.02) 100%);
+    border-left: 3px solid #f59e0b;
+    padding-left: 13px; /* 补偿左边框宽度 */
   }
-  .task-item.done .task-title { text-decoration: line-through; opacity: 0.35; }
-  .task-title { flex: 1; }
+
+  /* 已完成任务 */
+  .task-item.is-done { opacity: 0.45; }
+  .task-item.is-done .task-title { text-decoration: line-through; }
+
+  /* 拖拽手柄 */
+  .drag-handle {
+    cursor: grab;
+    color: var(--color-text-mute);
+    font-size: 14px;
+    user-select: none;
+    flex-shrink: 0;
+    line-height: 1;
+    opacity: 0.4;
+    transition: opacity 0.15s;
+  }
+  .task-item:hover .drag-handle { opacity: 0.7; }
+  .task-item.drag-over { border-top: 2px solid var(--color-accent); }
+  .task-item.dragging { opacity: 0.5; }
+
+  /* 圆形 checkbox */
+  .task-checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--color-border-strong);
+    background: transparent;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .task-checkbox:hover { border-color: var(--color-accent); }
+  .task-item.is-focused .task-checkbox { border-color: #f59e0b; }
+  .task-item.is-done .task-checkbox {
+    background: #4ade80;
+    border-color: #4ade80;
+  }
+  .task-item.is-done .task-checkbox::after {
+    content: '✓';
+    color: #1a1a2e;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  /* 聚焦 checkbox 脉冲动点 */
+  .task-item.is-focused .task-checkbox::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f59e0b;
+    animation: checkbox-pulse 1.5s infinite;
+  }
+  @keyframes checkbox-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  .task-title {
+    flex: 1;
+    line-height: 1.6;
+  }
   .task-pomos {
     font-family: var(--font-mono);
     font-size: var(--font-size-xs);
     color: var(--color-text-mute);
     white-space: nowrap;
+    flex-shrink: 0;
   }
+  .task-delete {
+    background: none;
+    border: none;
+    color: var(--color-text-mute);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    padding: 2px 4px;
+    border-radius: var(--radius);
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+    line-height: 1;
+  }
+  .task-item:hover .task-delete { opacity: 0.6; }
+  .task-delete:hover { opacity: 1 !important; color: #f87171; }
+
+  /* 空状态 */
+  .task-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 20px;
+    text-align: center;
+    color: var(--color-text-mute);
+    gap: 6px;
+  }
+  .task-empty-icon { font-size: 28px; line-height: 1; opacity: 0.5; }
+  .task-empty-text { font-size: var(--font-size-sm); }
 
   /* ─── 环境音（内嵌小栏）──────────────────────────────────── */
   .focus-audio { margin-top: calc(-1 * var(--space-3)); }
@@ -551,12 +655,21 @@
   function renderTasks() {
     if (!taskListEl) return;
     const tasks = loadTasks();
+    if (tasks.length === 0) {
+      taskListEl.innerHTML = `<div class="task-empty">
+        <span class="task-empty-icon">📝</span>
+        <span class="task-empty-text">还没有任务</span>
+        <span class="task-empty-text">添加一个开始专注吧 🎯</span>
+      </div>`;
+      return;
+    }
     taskListEl.innerHTML = tasks.map(t => `
-      <li class="task-item${t.id === state.currentTaskId ? ' active' : ''}${t.done ? ' done' : ''}" data-task-id="${t.id}">
-        <input type="checkbox" data-task-toggle="${t.id}" ${t.done ? 'checked' : ''} />
+      <li class="task-item${t.id === state.currentTaskId ? ' is-focused' : ''}${t.done ? ' is-done' : ''}" data-task-id="${t.id}" draggable="true">
+        <span class="drag-handle" aria-hidden="true">⋮⋮</span>
+        <button class="task-checkbox" data-task-toggle="${t.id}" aria-label="${t.done ? '取消完成' : '完成任务'}"></button>
         <span class="task-title">${esc(t.title)}</span>
-        <span class="task-pomos">🍅 ${t.pomodoros}</span>
-        <button class="btn ghost" data-task-delete="${t.id}" type="button">✕</button>
+        <span class="task-pomos">${t.pomodoros > 0 ? '🍅 ' + t.pomodoros : ''}</span>
+        <button class="task-delete" data-task-delete="${t.id}" aria-label="删除任务">✕</button>
       </li>`).join('');
   }
 
@@ -575,18 +688,82 @@
     if (!item) return;
     const id = item.dataset.taskId!;
     const tasks = loadTasks();
+
+    // 删除按钮
     if (t.closest('[data-task-delete]')) {
       const f = tasks.filter(x => x.id !== id);
       saveTasks(f);
       if (state.currentTaskId === id) { state.currentTaskId = null; saveState(state); }
       renderTasks(); return;
     }
+
+    // 切换完成状态
     if (t.closest('[data-task-toggle]')) {
-      const m = tasks.find(x => x.id === id); if (m) { m.done = (t as HTMLInputElement).checked; saveTasks(tasks); }
+      const m = tasks.find(x => x.id === id);
+      if (m) { m.done = !m.done; saveTasks(tasks); }
       renderTasks(); return;
     }
+
+    // 点击任务主体 → 设为当前聚焦任务
     state.currentTaskId = state.currentTaskId === id ? null : id;
     saveState(state); renderTasks();
+  });
+
+  // ─── 拖拽排序 ─────────────────────────────────────────────
+  let dragSrcEl: HTMLElement | null = null;
+
+  function taskSyncOrder() {
+    const items = taskListEl.querySelectorAll('[data-task-id]');
+    const newOrder: string[] = [];
+    items.forEach(el => newOrder.push((el as HTMLElement).dataset.taskId!));
+    const tasks = loadTasks();
+    const reordered = newOrder.map(id => tasks.find(t => t.id === id)!).filter(Boolean);
+    saveTasks(reordered);
+  }
+
+  taskListEl.addEventListener('dragstart', (e) => {
+    const el = (e.target as HTMLElement).closest('[data-task-id]') as HTMLElement;
+    if (!el) { e.preventDefault(); return; }
+    dragSrcEl = el;
+    e.dataTransfer!.effectAllowed = 'move';
+    el.classList.add('dragging');
+  });
+
+  taskListEl.addEventListener('dragend', () => {
+    if (dragSrcEl) {
+      dragSrcEl.classList.remove('dragging');
+      taskSyncOrder();
+      renderTasks();
+    }
+    dragSrcEl = null;
+    taskListEl.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  });
+
+  taskListEl.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = 'move';
+  });
+
+  taskListEl.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    const target = (e.target as HTMLElement).closest('[data-task-id]') as HTMLElement;
+    if (!target || target === dragSrcEl) return;
+    taskListEl.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    target.classList.add('drag-over');
+  });
+
+  taskListEl.addEventListener('dragleave', (e) => {
+    const target = (e.target as HTMLElement).closest('[data-task-id]') as HTMLElement;
+    if (target) target.classList.remove('drag-over');
+  });
+
+  taskListEl.addEventListener('drop', (e) => {
+    e.preventDefault();
+    taskListEl.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    const target = (e.target as HTMLElement).closest('[data-task-id]') as HTMLElement;
+    if (!target || !dragSrcEl || target === dragSrcEl) return;
+    taskListEl.insertBefore(dragSrcEl, target);
+    taskSyncOrder();
   });
 
   function recordFocusForTask() {
