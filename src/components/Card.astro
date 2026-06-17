@@ -32,11 +32,11 @@ const tags = normalizeTags(data.tags);
 // 仅博客显示阅读时长（工具/产品无意义）
 const minutes = collection === 'blog' && body ? readingTime(body) : 0;
 
-// app 工具 → 跳交互页；有外部 url → 跳外链；否则跳详情页
+// app 工具/产品 → 跳交互页；有外部 url → 跳外链；否则跳详情页
 const isExternal = Boolean(data.url);
-const isApp = collection === 'tools' && data.app === true;
+const isApp = (collection === 'tools' || collection === 'products') && data.app === true;
 const href = isApp
-  ? `/tools/${slug}/app`
+  ? `/${collection}/${slug}/app`
   : isExternal
   ? data.url!
   : `/${collection === 'blog' ? 'blog' : collection}/${slug}`;
