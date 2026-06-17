@@ -17,6 +17,18 @@
     <button class="btn ghost" data-action="reset">重置</button>
   </div>
 
+  <!-- 声音控制 -->
+  <div class="focus-audio">
+    <label class="ambient-toggle">
+      <span>环境音</span>
+      <select data-ambient>
+        <option value="none">关闭</option>
+        <option value="white">白噪音</option>
+        <option value="rain">雨声</option>
+      </select>
+    </label>
+  </div>
+
   <!-- 统计概览 -->
   <div class="focus-stats">
     <div class="stats-summary">
@@ -80,6 +92,23 @@
   }
   .btn.ghost { opacity: 0.7; }
   .btn[hidden] { display: none; }
+  .focus-audio { margin-top: var(--space-4); }
+  .ambient-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-mute);
+  }
+  .ambient-toggle select {
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+  }
   .focus-stats {
     width: 100%;
     max-width: 600px;
@@ -359,6 +388,19 @@
   function recordFocusForTask() {}
 
   renderStats(); // 初始渲染
+
+  // ─── 环境音切换 ───────────────────────────────────────────
+  const ambientSelect = document.querySelector('[data-ambient]') as HTMLSelectElement;
+  if (ambientSelect) {
+    ambientSelect.value = settings.ambient;
+    ambientSelect.addEventListener('change', () => {
+      audio.ensureContext();
+      const mode = ambientSelect.value as 'none' | 'white' | 'rain';
+      settings.ambient = mode;
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+      audio.setAmbient(mode);
+    });
+  }
 
   // 绑定
   startBtn.addEventListener('click', start);
