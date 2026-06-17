@@ -1,0 +1,249 @@
+---
+// Focus 专注计时器 —— 番茄工作法
+// 计时循环 + 本地统计 + 声音/环境音 + 任务清单
+---
+<div class="focus-tool">
+  <!-- 倒计时显示 -->
+  <div class="focus-display">
+    <div class="phase-label" data-phase-label>准备开始</div>
+    <div class="time" data-time>25:00</div>
+  </div>
+
+  <!-- 控制按钮 -->
+  <div class="focus-controls">
+    <button class="btn primary" data-action="start">开始</button>
+    <button class="btn" data-action="pause" hidden>暂停</button>
+    <button class="btn ghost" data-action="skip">跳过</button>
+    <button class="btn ghost" data-action="reset">重置</button>
+  </div>
+
+  <!-- 统计概览（占位，Task 8 填充） -->
+  <div class="focus-stats" data-stats hidden></div>
+</div>
+
+<style>
+  .focus-tool {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-8);
+    padding: var(--space-8) 0;
+  }
+  .focus-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .phase-label {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-mute);
+  }
+  .time {
+    font-family: var(--font-mono);
+    font-size: 6rem;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .focus-controls {
+    display: flex;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .btn {
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--font-size-base);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: opacity var(--transition), background var(--transition);
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn.primary {
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    border-color: var(--color-accent);
+  }
+  .btn.ghost { opacity: 0.7; }
+  .btn[hidden] { display: none; }
+</style>
+
+<script>
+  import {
+    DEFAULT_SETTINGS, defaultTimerState, phaseDurationMs, nextPhase,
+    type TimerState, type Settings, type Phase,
+  } from '../../lib/timer-engine';
+
+  const PHASE_LABELS: Record<Phase, string> = {
+    'idle': '准备开始',
+    'focus': '专注中',
+    'short-break': '短休息',
+    'long-break': '长休息',
+  };
+
+  const SETTINGS_KEY = 'focus-settings';
+  const STATE_KEY = 'focus-timer';
+
+  function loadSettings(): Settings {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    } catch (e) {}
+    return { ...DEFAULT_SETTINGS };
+  }
+
+  function loadState(): TimerState {
+    try {
+      const raw = localStorage.getItem(STATE_KEY);
+      if (raw) return { ...defaultTimerState(), ...JSON.parse(raw) };
+    } catch (e) {}
+    return defaultTimerState();
+  }
+
+  function saveState(s: TimerState) {
+    try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch (e) {}
+  }
+
+  const timeEl = document.querySelector('[data-time]') as HTMLElement;
+  const phaseLabelEl = document.querySelector('[data-phase-label]') as HTMLElement;
+  const startBtn = document.querySelector('[data-action="start"]') as HTMLButtonElement;
+  const pauseBtn = document.querySelector('[data-action="pause"]') as HTMLButtonElement;
+  const skipBtn = document.querySelector('[data-action="skip"]') as HTMLButtonElement;
+  const resetBtn = document.querySelector('[data-action="reset"]') as HTMLButtonElement;
+
+  const settings = loadSettings();
+  let state = loadState();
+  let rafId: number | null = null;
+
+  // ─── 时间格式化 ───────────────────────────────────────────
+  function formatMs(ms: number): string {
+    const totalSec = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  // ─── 剩余时间 ─────────────────────────────────────────────
+  function remainingMs(): number {
+    if (state.endTime != null) return Math.max(0, state.endTime - Date.now());
+    if (state.pausedRemaining != null) return state.pausedRemaining;
+    if (state.phase === 'idle') return phaseDurationMs('focus', settings);
+    return 0;
+  }
+
+  // ─── 渲染 ─────────────────────────────────────────────────
+  function render() {
+    const rem = remainingMs();
+    if (timeEl) timeEl.textContent = formatMs(rem);
+    if (phaseLabelEl) phaseLabelEl.textContent = PHASE_LABELS[state.phase];
+    const running = state.endTime != null;
+    startBtn.hidden = running;
+    pauseBtn.hidden = !running;
+    document.title = `${formatMs(rem)} · Focus`;
+  }
+
+  // ─── 开始 ─────────────────────────────────────────────────
+  function start() {
+    audio.ensureContext();
+    if (state.phase === 'idle') state.phase = 'focus';
+    const rem = remainingMs();
+    state.endTime = Date.now() + rem;
+    state.pausedRemaining = null;
+    saveState(state);
+    render();
+    loop();
+  }
+
+  // ─── 暂停 ─────────────────────────────────────────────────
+  function pause() {
+    if (state.endTime == null) return;
+    state.pausedRemaining = state.endTime - Date.now();
+    state.endTime = null;
+    saveState(state);
+    render();
+    stopLoop();
+  }
+
+  // ─── 完成当前阶段，进入下一阶段 ───────────────────────────
+  function completePhase() {
+    stopLoop();
+    const wasFocus = state.phase === 'focus';
+    if (wasFocus) {
+      state.completedFocus += 1;
+      recordFocusComplete();
+      recordFocusForTask();
+    }
+    const { phase } = nextPhase(state.phase, wasFocus ? state.completedFocus - 1 : state.completedFocus, settings);
+    state.phase = phase;
+    state.endTime = Date.now() + phaseDurationMs(phase, settings);
+    state.pausedRemaining = null;
+    saveState(state);
+    playChimeIfOn();
+    render();
+    if (state.phase !== 'idle') loop();
+  }
+
+  // ─── 跳过 ─────────────────────────────────────────────────
+  function skip() {
+    if (state.phase === 'idle') return;
+    completePhase();
+  }
+
+  // ─── 重置 ─────────────────────────────────────────────────
+  function reset() {
+    stopLoop();
+    state = defaultTimerState();
+    saveState(state);
+    render();
+  }
+
+  // ─── RAF 循环 ─────────────────────────────────────────────
+  function loop() {
+    stopLoop();
+    const tick = () => {
+      if (state.endTime != null && Date.now() >= state.endTime) {
+        completePhase();
+        return;
+      }
+      render();
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+  }
+  function stopLoop() {
+    if (rafId != null) cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
+  // ─── 后台切回重绘 ─────────────────────────────────────────
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && state.endTime != null) {
+      if (Date.now() >= state.endTime) completePhase();
+      else render();
+    }
+  });
+
+  // 占位（Task 8/9/10 替换）—— 已提前 import AudioKit 以免后续改动大
+  import { AudioKit } from '../../lib/audio';
+  const audio = new AudioKit();
+  function playChimeIfOn() {
+    if (settings.soundOn) audio.playChime();
+  }
+  function recordFocusComplete() {}
+  function recordFocusForTask() {}
+
+  // 绑定
+  startBtn.addEventListener('click', start);
+  pauseBtn.addEventListener('click', pause);
+  skipBtn.addEventListener('click', skip);
+  resetBtn.addEventListener('click', reset);
+
+  render();
+</script>

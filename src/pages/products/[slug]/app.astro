@@ -1,0 +1,77 @@
+---
+// 产品交互页 —— /products/<slug>/app
+// 仅对 app: true 的产品生效，渲染对应的交互组件
+import { getCollection } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import FormattedDate from '../../../components/FormattedDate.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('products', ({ data }) => data.draft !== true && data.app === true);
+  return entries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { data } = entry;
+
+// 根据 slug 决定渲染哪个交互组件
+const COMPONENT_MAP: Record<string, string> = {
+  'focus-timer': 'FocusTimer',
+};
+const component = COMPONENT_MAP[entry.slug];
+if (!component) {
+  return Astro.redirect(`/products/${entry.slug}`);
+}
+
+const Interactive = (await import(`../../../components/products/${component}.astro`)).default;
+---
+
+<Base title={`${data.title} — 产品`} description={data.description}>
+  <div class="container container-wide">
+    <header class="tool-app-header">
+      <a href="/products" class="link-underline muted">← 返回产品</a>
+      <h1>{data.title}</h1>
+      {data.description && <p class="lead">{data.description}</p>}
+      <div class="tool-meta">
+        <FormattedDate date={data.date} />
+        {data.tags && data.tags.length > 0 && (
+          data.tags.map((t: string) => <span class="tag">{t}</span>)
+        )}
+      </div>
+    </header>
+
+    <main class="tool-app-body">
+      <Interactive />
+    </main>
+  </div>
+</Base>
+
+<style>
+  .tool-app-header {
+    padding-block: var(--space-6) var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-6);
+  }
+  .tool-app-header h1 {
+    margin-top: var(--space-2);
+    font-size: var(--font-size-xl);
+  }
+  .tool-app-header .lead {
+    margin-top: var(--space-2);
+    font-size: var(--font-size-sm);
+  }
+  .tool-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+  }
+  .tool-app-body {
+    padding-bottom: var(--space-12);
+  }
+</style>
