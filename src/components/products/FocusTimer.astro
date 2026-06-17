@@ -45,6 +45,7 @@
       <div class="stat"><span class="stat-num" data-stat-week>0</span><span class="stat-label">最近7天</span></div>
       <div class="stat"><span class="stat-num" data-stat-total>0h</span><span class="stat-label">累计专注</span></div>
     </div>
+    <div class="chart-heading">每日番茄数</div>
     <div class="stats-chart" data-stats-chart></div>
   </div>
 </div>
@@ -170,6 +171,12 @@
   .stat { display: flex; flex-direction: column; gap: var(--space-1); }
   .stat-num { font-size: var(--font-size-2xl); font-weight: 700; font-variant-numeric: tabular-nums; }
   .stat-label { font-size: var(--font-size-xs); color: var(--color-text-mute); }
+  .chart-heading {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-mute);
+    text-align: center;
+    margin-bottom: var(--space-3);
+  }
   .stats-chart {
     display: flex;
     align-items: flex-end;
@@ -400,7 +407,11 @@
       d.setDate(now.getDate() - i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const p = stats[key]?.pomodoros || 0;
-      days.push({ key, label: `${d.getMonth() + 1}/${d.getDate()}`, pomodoros: p });
+      const idx = days.length; // 0=最早, 6=今天
+      const label = idx === 0 || idx === 6
+        ? `${d.getMonth() + 1}/${d.getDate()}`
+        : String(d.getDate());
+      days.push({ key, label, pomodoros: p });
       weekTotal += p;
     }
     Object.values(stats).forEach((d) => { grandTotalMs += d.focusMs; });
