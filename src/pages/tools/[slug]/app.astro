@@ -30,7 +30,7 @@ const ToolComponent = (await import(`../../../components/tools/${component}.astr
 ---
 
 <Base title={`${data.title} — 工具`} description={data.description}>
-  <div class="container container-narrow">
+  <div class="container container-wide">
     <header class="tool-app-header">
       <a href="/tools" class="link-underline muted">← 返回工具</a>
       <h1>{data.title}</h1>
@@ -51,26 +51,28 @@ const ToolComponent = (await import(`../../../components/tools/${component}.astr
 
 <style>
   .tool-app-header {
-    padding-block: var(--space-8) var(--space-6);
+    padding-block: var(--space-6) var(--space-4);
     border-bottom: 1px solid var(--color-border);
-    margin-bottom: var(--space-8);
+    margin-bottom: var(--space-6);
   }
   .tool-app-header h1 {
-    margin-top: var(--space-3);
+    margin-top: var(--space-2);
+    font-size: var(--font-size-xl);
   }
   .tool-app-header .lead {
     margin-top: var(--space-2);
+    font-size: var(--font-size-sm);
   }
   .tool-meta {
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    margin-top: var(--space-4);
+    margin-top: var(--space-3);
     font-size: var(--font-size-xs);
     font-family: var(--font-mono);
     color: var(--color-text-mute);
   }
   .tool-app-body {
-    padding-bottom: var(--space-16);
+    padding-bottom: var(--space-12);
   }
 </style>

@@ -138,6 +138,22 @@ a {
   max-width: var(--content-width);
 }
 
+/* 交互工具专用：尽量铺满视口宽度，仅保留舒适边距 */
+.container-wide {
+  max-width: 1600px;
+  padding-inline: var(--space-6);
+}
+@media (min-width: 768px) {
+  .container-wide {
+    padding-inline: var(--space-8);
+  }
+}
+@media (min-width: 1280px) {
+  .container-wide {
+    padding-inline: var(--space-12);
+  }
+}
+
 .section {
   padding-block: var(--space-16);
 }

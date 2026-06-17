@@ -31,7 +31,7 @@
       <div class="pane-label">
         <span data-output-label>预览</span>
       </div>
-      <div class="md-output" id="md-preview prose"><!-- 预览渲染处 --></div>
+      <div class="md-output prose" id="md-preview"><!-- 预览渲染处 --></div>
       <pre class="md-source" id="md-source" hidden><code></code></pre>
     </div>
   </div>
@@ -44,8 +44,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    height: calc(100vh - 220px);
-    min-height: 420px;
+    height: calc(100vh - 200px);
+    min-height: 460px;
   }
   .md-toolbar {
     display: flex;
@@ -169,7 +169,6 @@
   const source = document.getElementById('md-source');
   const sourceCode = source?.querySelector('code');
   const tabs = document.querySelectorAll<HTMLButtonElement>('.tab');
-  const outputWrap = document.querySelector('.md-output-wrap');
   const outputLabel = document.querySelector('[data-output-label]');
   const STORAGE_KEY = 'md-tool-content';
   const DEFAULT_MD = `# 欢迎使用 Markdown 转换器
@@ -220,11 +219,11 @@ function hello() {
     if (mode === 'preview') {
       preview?.removeAttribute('hidden');
       source?.setAttribute('hidden', '');
-      outputWrap?.classList.add('prose');
+      preview?.classList.add('prose');
     } else {
       preview?.setAttribute('hidden', '');
       source?.removeAttribute('hidden');
-      outputWrap?.classList.remove('prose');
+      preview?.classList.remove('prose');
     }
     if (outputLabel) outputLabel.textContent = mode === 'preview' ? '预览' : 'HTML 源码';
   }
