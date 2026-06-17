@@ -31,8 +31,8 @@
     <ul class="task-list" data-task-list></ul>
   </div>
 
-  <!-- 环境音 -->
-  <div class="focus-section focus-audio">
+  <!-- 环境音（内嵌小栏） -->
+  <div class="focus-audio">
     <label class="ambient-toggle">
       <span class="ambient-icon">🔇</span>
       <select data-ambient>
@@ -211,6 +211,12 @@
     transition: border-color var(--transition);
   }
   .task-input:focus { border-color: var(--color-accent); }
+  .task-form .btn {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  .task-form .btn:hover { background: var(--color-accent); color: var(--color-accent-contrast); }
   .task-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
   .task-item {
     display: flex;
@@ -237,8 +243,8 @@
     white-space: nowrap;
   }
 
-  /* ─── 环境音 ─────────────────────────────────────────────── */
-  .focus-audio { text-align: center; }
+  /* ─── 环境音（内嵌小栏）──────────────────────────────────── */
+  .focus-audio { margin-top: calc(-1 * var(--space-3)); }
   .ambient-toggle {
     display: inline-flex;
     align-items: center;
@@ -246,16 +252,18 @@
     font-size: var(--font-size-sm);
     color: var(--color-text-mute);
   }
-  .ambient-icon { font-size: var(--font-size-lg); }
+  .ambient-icon { font-size: var(--font-size-base); }
   .ambient-toggle select {
     padding: var(--space-1) var(--space-2);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    background: var(--color-surface);
-    color: var(--color-text);
+    background: transparent;
+    color: var(--color-text-mute);
     font-family: var(--font-mono);
     font-size: var(--font-size-xs);
+    cursor: pointer;
   }
+  .ambient-toggle select:focus { outline: none; border-color: var(--color-border-strong); }
 
   /* ─── 统计 ───────────────────────────────────────────────── */
   .focus-stats { text-align: center; }
