@@ -5,4 +5,5 @@ dist/
 .env
 .env.*
 *.log
-pnpm-workspace.yaml 
+pnpm-workspace.yaml
+.superpowers/
