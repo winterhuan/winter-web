@@ -22,6 +22,13 @@
     <!-- 长休进度圆点 -->
     <div class="focus-dots" data-dots role="img" aria-label="本轮番茄进度"></div>
 
+    <!-- 当前任务 -->
+    <div class="current-task" data-current-task-card>
+      <div class="current-task-kicker" data-current-task-kicker>当前任务</div>
+      <div class="current-task-title" data-current-task-title>无任务</div>
+      <div class="current-task-meta" data-current-task-meta>空闲</div>
+    </div>
+
     <!-- 控制按钮 -->
     <div class="focus-controls">
       <button class="btn primary" data-action="start" aria-label="开始（空格）">▶ 开始</button>
@@ -37,7 +44,8 @@
       </button>
       <label class="ambient-toggle">
         <span class="ambient-icon" data-ambient-icon aria-hidden="true">🔇</span>
-        <select data-ambient aria-label="环境音">
+        <span class="ambient-label">背景音</span>
+        <select data-ambient aria-label="专注背景音">
           <option value="none">关闭</option>
           <option value="white">白噪音</option>
           <option value="rain">雨声</option>
@@ -158,12 +166,17 @@
 <style>
   /* ─── 主题色变量：亮/暗两套，替换写死的 #f59e0b / #4ade80 ─── */
   .focus-tool {
-    --focus-color: #f59e0b;       /* 专注阶段强调色 */
-    --focus-soft: rgba(245, 158, 11, 0.12);
-    --break-color: #14b8a6;       /* 休息阶段强调色 */
-    --break-soft: rgba(20, 184, 166, 0.12);
+    --focus-color: #d97706;       /* 专注阶段强调色 */
+    --focus-contrast: #111111;
+    --focus-soft: rgba(217, 119, 6, 0.12);
+    --break-color: #0f766e;       /* 休息阶段强调色 */
+    --break-contrast: #ffffff;
+    --break-soft: rgba(15, 118, 110, 0.12);
     --done-color: #16a34a;        /* 完成态 */
     --danger-color: #ef4444;      /* 删除/危险 */
+    --panel-bg: color-mix(in srgb, var(--color-surface) 94%, var(--color-bg));
+    --panel-border: color-mix(in srgb, var(--color-border) 80%, var(--color-text));
+    --control-height: 38px;
     --kbd-bg: #f5f5f5;
     --kbd-border: #d4d4d4;
     --kbd-text: #525252;
@@ -171,11 +184,15 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']) .focus-tool {
       --focus-color: #fbbf24;
+      --focus-contrast: #111111;
       --focus-soft: rgba(251, 191, 36, 0.18);
       --break-color: #2dd4bf;
+      --break-contrast: #111111;
       --break-soft: rgba(45, 212, 191, 0.18);
       --done-color: #4ade80;
       --danger-color: #f87171;
+      --panel-bg: color-mix(in srgb, var(--color-surface) 92%, var(--color-bg));
+      --panel-border: color-mix(in srgb, var(--color-border) 86%, var(--color-text));
       --kbd-bg: #262626;
       --kbd-border: #404040;
       --kbd-text: #a3a3a3;
@@ -183,11 +200,15 @@
   }
   :root[data-theme='dark'] .focus-tool {
     --focus-color: #fbbf24;
+    --focus-contrast: #111111;
     --focus-soft: rgba(251, 191, 36, 0.18);
     --break-color: #2dd4bf;
+    --break-contrast: #111111;
     --break-soft: rgba(45, 212, 191, 0.18);
     --done-color: #4ade80;
     --danger-color: #f87171;
+    --panel-bg: color-mix(in srgb, var(--color-surface) 92%, var(--color-bg));
+    --panel-border: color-mix(in srgb, var(--color-border) 86%, var(--color-text));
     --kbd-bg: #262626;
     --kbd-border: #404040;
     --kbd-text: #a3a3a3;
@@ -202,6 +223,14 @@
     padding: var(--space-6) 0 var(--space-12);
     max-width: 880px;
     margin: 0 auto;
+    transition: max-width var(--transition), gap var(--transition);
+  }
+  .focus-tool[data-running="true"] {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 620px;
+  }
+  .focus-tool[data-running="true"] .focus-col--work {
+    display: none;
   }
   .focus-col {
     display: flex;
@@ -235,7 +264,7 @@
   }
   .ring-fill {
     fill: none;
-    stroke: var(--color-accent);
+    stroke: var(--focus-color);
     stroke-width: 8;
     stroke-linecap: round;
     stroke-dasharray: 565.486; /* 2 * π * 90 */
@@ -324,6 +353,46 @@
     50% { box-shadow: 0 0 0 5px transparent; }
   }
 
+  /* ─── 当前任务 ─── */
+  .current-task {
+    width: min(100%, 440px);
+    min-height: 74px;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--panel-border);
+    border-left: 3px solid var(--focus-color);
+    border-radius: var(--radius);
+    background: var(--panel-bg);
+    text-align: center;
+    transition: border-color var(--transition), background var(--transition), opacity var(--transition);
+  }
+  .focus-tool[data-phase="short-break"] .current-task,
+  .focus-tool[data-phase="long-break"] .current-task {
+    border-left-color: var(--break-color);
+    background: color-mix(in srgb, var(--break-soft) 34%, var(--panel-bg));
+  }
+  .current-task[data-empty="true"] {
+    border-left-color: var(--color-border);
+    opacity: 0.72;
+  }
+  .current-task-kicker {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-mute);
+  }
+  .current-task-title {
+    margin-top: 2px;
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+  .current-task-meta {
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-mute);
+  }
+
   /* ─── 控制按钮 ─── */
   .focus-controls {
     display: flex;
@@ -332,7 +401,11 @@
     justify-content: center;
   }
   .btn {
-    padding: var(--space-2) var(--space-5);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--control-height);
+    padding: var(--space-2) var(--space-4);
     font-size: var(--font-size-sm);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
@@ -345,13 +418,19 @@
   .btn:hover { border-color: var(--color-border-strong); background: var(--color-bg); }
   .btn:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
   .btn.primary {
-    background: var(--color-accent);
-    color: var(--color-accent-contrast);
-    border-color: var(--color-accent);
-    padding-inline: var(--space-8);
+    background: var(--focus-color);
+    color: var(--focus-contrast);
+    border-color: var(--focus-color);
+    padding-inline: var(--space-6);
     font-weight: 600;
   }
-  .btn.primary:hover { opacity: 0.88; background: var(--color-accent); }
+  .focus-tool[data-phase="short-break"] .btn.primary,
+  .focus-tool[data-phase="long-break"] .btn.primary {
+    background: var(--break-color);
+    color: var(--break-contrast);
+    border-color: var(--break-color);
+  }
+  .btn.primary:hover { opacity: 0.88; }
   .btn.ghost { border-color: transparent; background: transparent; opacity: 0.55; }
   .btn.ghost:hover { opacity: 0.85; border-color: var(--color-border); }
   .btn.danger { background: var(--danger-color); color: #fff; border-color: var(--danger-color); }
@@ -383,11 +462,15 @@
   .ambient-toggle {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-1);
     font-size: var(--font-size-sm);
     color: var(--color-text-mute);
   }
   .ambient-icon { font-size: var(--font-size-base); }
+  .ambient-label {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+  }
   .ambient-toggle select {
     padding: var(--space-1) var(--space-2);
     border: 1px solid var(--color-border);
@@ -409,6 +492,10 @@
     font-size: var(--font-size-xs);
     color: var(--color-text-mute);
     font-family: var(--font-mono);
+    transition: opacity var(--transition);
+  }
+  .focus-tool[data-running="true"] .kbd-hint {
+    opacity: 0.35;
   }
   .kbd-hint kbd {
     display: inline-block;
@@ -425,10 +512,10 @@
   /* ─── 区块卡片 ─── */
   .focus-section {
     width: 100%;
-    padding: var(--space-5);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface);
+    padding: var(--space-4);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    background: var(--panel-bg);
   }
   .section-head {
     display: flex;
@@ -481,29 +568,40 @@
   }
   .task-form .btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
 
-  .task-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
-  .task-item {
+  .task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+  .focus-tool :global(.task-item) {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
+    gap: var(--space-2);
+    min-height: 48px;
+    padding: var(--space-2) var(--space-3);
+    border-left: 3px solid transparent;
     border-bottom: 1px solid var(--color-border);
     transition: background 0.15s, border-color 0.15s;
     font-size: var(--font-size-sm);
     cursor: default;
   }
-  .task-item:last-child { border-bottom: none; }
-  .task-item:hover { background: var(--color-bg); }
-  .task-item.is-focused {
-    background: linear-gradient(90deg, var(--focus-soft) 0%, transparent 100%);
-    border-left: 3px solid var(--focus-color);
-    padding-left: 13px;
+  .focus-tool :global(.task-item:last-child) { border-bottom: none; }
+  .focus-tool :global(.task-item:hover) { background: var(--color-bg); }
+  .focus-tool :global(.task-item.is-focused) {
+    background: linear-gradient(90deg, var(--focus-soft) 0%, color-mix(in srgb, var(--focus-soft) 22%, transparent) 100%);
+    border-left-color: var(--focus-color);
   }
-  .task-item.is-done { opacity: 0.45; }
-  .task-item.is-done .task-title { text-decoration: line-through; }
-  .task-item.is-editing { background: var(--color-bg); }
+  .focus-tool :global(.task-item.is-done) { opacity: 0.45; }
+  .focus-tool :global(.task-item.is-done .task-title) { text-decoration: line-through; }
+  .focus-tool :global(.task-item.is-editing) { background: var(--color-bg); }
 
-  .drag-handle {
+  .focus-tool :global(.drag-handle) {
     cursor: grab;
     color: var(--color-text-mute);
     font-size: 14px;
@@ -513,11 +611,11 @@
     opacity: 0.4;
     transition: opacity 0.15s;
   }
-  .task-item:hover .drag-handle { opacity: 0.7; }
-  .task-item.drag-over { border-top: 2px solid var(--color-accent); }
-  .task-item.dragging { opacity: 0.5; }
+  .focus-tool :global(.task-item:hover .drag-handle) { opacity: 0.7; }
+  .focus-tool :global(.task-item.drag-over) { border-top: 2px solid var(--color-accent); }
+  .focus-tool :global(.task-item.dragging) { opacity: 0.5; }
 
-  .task-checkbox {
+  .focus-tool :global(.task-checkbox) {
     width: 22px;
     height: 22px;
     border-radius: 50%;
@@ -531,16 +629,16 @@
     padding: 0;
     transition: border-color 0.2s, background 0.2s;
   }
-  .task-checkbox:hover { border-color: var(--color-accent); }
-  .task-item.is-focused .task-checkbox { border-color: var(--focus-color); }
-  .task-item.is-done .task-checkbox { background: var(--done-color); border-color: var(--done-color); }
-  .task-item.is-done .task-checkbox::after {
+  .focus-tool :global(.task-checkbox:hover) { border-color: var(--color-accent); }
+  .focus-tool :global(.task-item.is-focused .task-checkbox) { border-color: var(--focus-color); }
+  .focus-tool :global(.task-item.is-done .task-checkbox) { background: var(--done-color); border-color: var(--done-color); }
+  .focus-tool :global(.task-item.is-done .task-checkbox::after) {
     content: '✓';
     color: #fff;
     font-size: 10px;
     font-weight: 700;
   }
-  .task-item.is-focused .task-checkbox::before {
+  .focus-tool :global(.task-item.is-focused .task-checkbox::before) {
     content: '';
     width: 8px;
     height: 8px;
@@ -553,13 +651,13 @@
     50% { opacity: 0.5; transform: scale(0.7); }
   }
 
-  .task-title {
+  .focus-tool :global(.task-title) {
     flex: 1;
     line-height: 1.6;
     min-width: 0;
     word-break: break-word;
   }
-  .task-title-input {
+  .focus-tool :global(.task-title-input) {
     flex: 1;
     min-width: 0;
     padding: 2px 6px;
@@ -571,16 +669,16 @@
     font-family: var(--font-mono);
     outline: none;
   }
-  .task-pomos {
+  .focus-tool :global(.task-pomos) {
     font-family: var(--font-mono);
     font-size: var(--font-size-xs);
     color: var(--color-text-mute);
     white-space: nowrap;
     flex-shrink: 0;
   }
-  .task-pomos.is-over { color: var(--focus-color); }
-  .task-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
-  .task-icon-btn {
+  .focus-tool :global(.task-pomos .is-over) { color: var(--focus-color); }
+  .focus-tool :global(.task-actions) { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+  .focus-tool :global(.task-icon-btn) {
     background: none;
     border: none;
     color: var(--color-text-mute);
@@ -592,11 +690,11 @@
     transition: opacity 0.15s, color 0.15s;
     line-height: 1;
   }
-  .task-item:hover .task-icon-btn { opacity: 0.6; }
-  .task-icon-btn:hover { opacity: 1 !important; color: var(--color-text); }
-  .task-delete:hover { color: var(--danger-color) !important; }
+  .focus-tool :global(.task-item:hover .task-icon-btn) { opacity: 0.6; }
+  .focus-tool :global(.task-icon-btn:hover) { opacity: 1 !important; color: var(--color-text); }
+  .focus-tool :global(.task-delete:hover) { color: var(--danger-color) !important; }
 
-  .task-empty {
+  .focus-tool :global(.task-empty) {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -606,8 +704,8 @@
     color: var(--color-text-mute);
     gap: 6px;
   }
-  .task-empty-icon { font-size: 28px; line-height: 1; opacity: 0.5; }
-  .task-empty-text { font-size: var(--font-size-sm); }
+  .focus-tool :global(.task-empty-icon) { font-size: 28px; line-height: 1; opacity: 0.5; }
+  .focus-tool :global(.task-empty-text) { font-size: var(--font-size-sm); }
 
   /* ─── 统计 ─── */
   .stats-summary {
@@ -644,15 +742,21 @@
     font-family: var(--font-mono);
     margin-bottom: var(--space-3);
   }
-  .stats-chart { display: flex; align-items: flex-end; gap: var(--space-2); height: 72px; }
-  .chart-bar {
+  .stats-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-2);
+    height: 88px;
+  }
+  .stats-chart :global(.chart-bar) {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: var(--space-1);
+    min-width: 0;
   }
-  .chart-bar-fill {
+  .stats-chart :global(.chart-bar-fill) {
     width: 100%;
     max-width: 36px;
     border-radius: 4px 4px 0 0;
@@ -660,11 +764,11 @@
     transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     background: linear-gradient(to top, var(--color-accent), color-mix(in srgb, var(--color-accent) 60%, transparent));
   }
-  .chart-bar-fill.active {
+  .stats-chart :global(.chart-bar-fill.active) {
     background: linear-gradient(to top, var(--focus-color), color-mix(in srgb, var(--focus-color) 40%, transparent));
     opacity: 1;
   }
-  .chart-bar-label { font-size: 0.6rem; color: var(--color-text-mute); font-family: var(--font-mono); line-height: 1; }
+  .stats-chart :global(.chart-bar-label) { font-size: 0.6rem; color: var(--color-text-mute); font-family: var(--font-mono); line-height: 1; }
 
   /* ─── 设置抽屉（项1）─── */
   .settings-overlay {
@@ -695,7 +799,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-5);
+    padding: var(--space-4);
     border-bottom: 1px solid var(--color-border);
   }
   .settings-head h2 { margin: 0; font-size: var(--font-size-lg); }
@@ -710,7 +814,7 @@
     line-height: 1;
   }
   .settings-close:hover { background: var(--color-bg); color: var(--color-text); }
-  .settings-body { flex: 1; padding: var(--space-5); overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); }
+  .settings-body { flex: 1; padding: var(--space-4); overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-4); }
   .setting-row {
     display: flex;
     align-items: center;
@@ -734,7 +838,7 @@
   }
   .setting-control input[type="number"]:focus { outline: none; border-color: var(--color-accent); }
   .setting-control input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
-  .settings-foot { padding: var(--space-4) var(--space-5); border-top: 1px solid var(--color-border); }
+  .settings-foot { padding: var(--space-4); border-top: 1px solid var(--color-border); }
 
   /* ─── 确认弹窗 + toast ─── */
   .confirm-dialog {
@@ -745,7 +849,7 @@
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-    padding: var(--space-5);
+    padding: var(--space-4);
     z-index: 52;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     display: flex;
@@ -778,8 +882,12 @@
   @media (max-width: 500px) {
     .focus-ring-wrap { width: 170px; height: 170px; }
     .ring-bg, .ring-fill { stroke-width: 6; }
-    .ring-fill { stroke-dasharray: 502.654; } /* 2*π*80 */
     .time { font-size: 2.75rem; }
+    .current-task { min-height: 68px; }
+    .task-form { display: grid; grid-template-columns: 1fr; }
+    .task-form .btn { width: 100%; }
+    .stats-summary { gap: var(--space-3); }
+    .focus-tool :global(.task-icon-btn) { opacity: 0.55; }
   }
 
   /* ─── reduced-motion：关闭所有动画（项8）─── */
@@ -788,7 +896,7 @@
     .focus-tool[data-reduced-motion="true"] .phase-label,
     .focus-tool[data-reduced-motion="true"] .time { transition: none; }
     .focus-tool[data-reduced-motion="true"] .focus-dot.is-current,
-    .focus-tool[data-reduced-motion="true"] .task-item.is-focused .task-checkbox::before,
+    .focus-tool[data-reduced-motion="true"] :global(.task-item.is-focused .task-checkbox::before),
     .focus-tool[data-reduced-motion="true"] .focus-tool.is-flashing .focus-ring-wrap,
     .focus-tool[data-reduced-motion="true"] .phase-hint { animation: none; }
   }
@@ -803,7 +911,7 @@
 
   const PHASE_LABELS: Record<Phase, string> = {
     'idle': '准备开始', 'focus': '专注中',
-    'short-break': '短休息', 'long-break': '长休息',
+    'short-break': '离开屏幕', 'long-break': '长休息',
   };
 
   const RING_CIRCUMFERENCE = 565.486; // 2*π*90
@@ -838,6 +946,10 @@
   const skipBtn = document.querySelector('[data-action="skip"]') as HTMLButtonElement;
   const resetBtn = document.querySelector('[data-action="reset"]') as HTMLButtonElement;
   const ambientIconEl = document.querySelector('[data-ambient-icon]') as HTMLElement;
+  const currentTaskCardEl = document.querySelector('[data-current-task-card]') as HTMLElement;
+  const currentTaskKickerEl = document.querySelector('[data-current-task-kicker]') as HTMLElement;
+  const currentTaskTitleEl = document.querySelector('[data-current-task-title]') as HTMLElement;
+  const currentTaskMetaEl = document.querySelector('[data-current-task-meta]') as HTMLElement;
 
   const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   toolEl.dataset.reducedMotion = String(REDUCED_MOTION);
@@ -845,7 +957,13 @@
   let settings = loadSettings();
   let state = loadState();
   let rafId: number | null = null;
+  let currentTaskSummaryKey = '';
   const audio = new AudioKit();
+
+  function syncAmbientPlayback(mode = settings.ambient) {
+    const shouldPlay = state.endTime != null && state.phase === 'focus';
+    audio.setAmbient(shouldPlay ? mode : 'none');
+  }
 
   // 应用阶段时长变化后，需重新计算 endTime
   function applySettings(next: Settings) {
@@ -889,8 +1007,19 @@
     if (ringFillEl) ringFillEl.style.strokeDashoffset = String(RING_CIRCUMFERENCE * (1 - frac));
     if (toolEl) toolEl.dataset.phase = state.phase;
     const running = state.endTime != null;
+    toolEl.dataset.running = String(running);
     startBtn.hidden = running;
     pauseBtn.hidden = !running;
+    startBtn.textContent = state.phase === 'focus' ? '▶ 继续专注'
+      : state.phase === 'short-break' || state.phase === 'long-break' ? '▶ 继续休息'
+        : '▶ 开始专注';
+    pauseBtn.textContent = state.phase === 'focus' ? '⏸ 暂停'
+      : state.phase === 'short-break' || state.phase === 'long-break' ? '⏸ 暂停休息'
+        : '⏸ 暂停';
+    skipBtn.textContent = state.phase === 'focus' ? '⏭ 结束本轮'
+      : state.phase === 'short-break' || state.phase === 'long-break' ? '⏭ 跳过休息'
+        : '⏭ 跳过';
+    renderCurrentTaskSummary();
     // 标签页标题（项8：完成后提示「时间到」）
     if (rem === 0 && state.phase !== 'idle') document.title = '⏰ 时间到 · Focus';
     else document.title = `${formatMs(rem)} · ${PHASE_LABELS[state.phase]}`;
@@ -936,6 +1065,7 @@
     state.pausedRemaining = null;
     safeSet(STATE_KEY, JSON.stringify(state));
     render(); renderDots();
+    syncAmbientPlayback();
     loop();
   }
   function pause() {
@@ -943,6 +1073,7 @@
     state.pausedRemaining = state.endTime - Date.now();
     state.endTime = null;
     safeSet(STATE_KEY, JSON.stringify(state));
+    syncAmbientPlayback();
     render();
     stopLoop();
   }
@@ -961,6 +1092,7 @@
     state.pausedRemaining = null;
     safeSet(STATE_KEY, JSON.stringify(state));
     if (settings.soundOn) audio.playChime();
+    syncAmbientPlayback();
     flashRing();
     showPhaseHint(wasFocus ? '专注完成！去休息一下吧 🎉' : '休息结束，继续专注 💪');
     render(); renderDots();
@@ -971,6 +1103,7 @@
     stopLoop();
     state = defaultTimerState();
     safeSet(STATE_KEY, JSON.stringify(state));
+    syncAmbientPlayback();
     render(); renderDots();
   }
 
@@ -1076,11 +1209,39 @@
   const taskCountEl = document.querySelector('[data-task-count]') as HTMLElement;
   function esc(s: string) { return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]!)); }
 
+  function renderCurrentTaskSummary(force = false) {
+    if (!currentTaskCardEl || !currentTaskTitleEl || !currentTaskMetaEl || !currentTaskKickerEl) return;
+    const key = `${state.phase}|${state.endTime != null}|${state.currentTaskId ?? ''}|${state.completedFocus}`;
+    if (!force && key === currentTaskSummaryKey) return;
+    currentTaskSummaryKey = key;
+    const tasks = loadTasks();
+    const current = tasks.find(t => t.id === state.currentTaskId);
+    const isBreak = state.phase === 'short-break' || state.phase === 'long-break';
+    currentTaskCardEl.dataset.empty = String(!current);
+
+    if (!current) {
+      currentTaskKickerEl.textContent = isBreak ? '休息中' : state.phase === 'focus' ? '本轮专注' : '当前任务';
+      currentTaskTitleEl.textContent = '无任务';
+      currentTaskMetaEl.textContent = isBreak ? '下一轮再选择' : state.phase === 'focus' ? '自由专注' : '空闲';
+      return;
+    }
+
+    currentTaskKickerEl.textContent = isBreak ? '休息中' : state.phase === 'focus' ? '本轮专注' : '当前任务';
+    currentTaskTitleEl.textContent = current.title;
+    const progress = current.estimate > 0 ? `${current.pomodoros}/${current.estimate}` : String(current.pomodoros);
+    currentTaskMetaEl.textContent = isBreak
+      ? '下一轮继续'
+      : state.phase === 'focus'
+        ? `番茄 ${progress}`
+        : `已完成 ${progress} 个番茄`;
+  }
+
   function renderTasks() {
     if (!taskListEl) return;
     const tasks = loadTasks();
     const active = tasks.filter(t => !t.done).length;
     taskCountEl.textContent = tasks.length > 0 ? `${active} 进行中 · ${tasks.length - active} 完成` : '';
+    renderCurrentTaskSummary(true);
 
     if (tasks.length === 0) {
       taskListEl.innerHTML = `<div class="task-empty">
@@ -1143,8 +1304,13 @@
     const title = taskInput.value.trim();
     if (!title) return;
     const tasks = loadTasks();
-    tasks.push({ id: crypto.randomUUID(), title, pomodoros: 0, estimate: 0, done: false, createdAt: Date.now() });
-    saveTasks(tasks); taskInput.value = ''; renderTasks();
+    const next = { id: crypto.randomUUID(), title, pomodoros: 0, estimate: 0, done: false, createdAt: Date.now() };
+    tasks.push(next);
+    if (!state.currentTaskId) {
+      state.currentTaskId = next.id;
+      safeSet(STATE_KEY, JSON.stringify(state));
+    }
+    saveTasks(tasks); taskInput.value = ''; renderTasks(); render();
   });
 
   // 删除确认（项4）
@@ -1181,11 +1347,11 @@
     if (t.closest('[data-task-toggle]')) {
       const m = tasks.find(x => x.id === id);
       if (m) { m.done = !m.done; saveTasks(tasks); }
-      renderTasks(); return;
+      renderTasks(); render(); return;
     }
     // 点击任务主体 → 设为当前聚焦任务
     state.currentTaskId = state.currentTaskId === id ? null : id;
-    safeSet(STATE_KEY, JSON.stringify(state)); renderTasks();
+    safeSet(STATE_KEY, JSON.stringify(state)); renderTasks(); render();
   });
 
   // 双击标题编辑
@@ -1303,9 +1469,11 @@
       const mode = ambientSelect.value as 'none' | 'white' | 'rain';
       applySettings({ ...settings, ambient: mode });
       syncAmbientIcon();
-      audio.setAmbient(mode);
+      syncAmbientPlayback(mode);
     });
   }
+
+  window.addEventListener('pagehide', () => audio.dispose());
 
   // ─── toast（项8）───
   const toastEl = document.querySelector('[data-toast]') as HTMLElement;
