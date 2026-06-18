@@ -1,12 +1,12 @@
 ---
-// 工具交互页 —— /tools/<slug>/app
-// 仅对 app: true 的工具生效，渲染对应的交互组件
-import { getCollection, render } from 'astro:content';
+// 产品交互页 —— /products/<slug>/app
+// 仅对 app: true 的产品生效，渲染对应的交互组件
+import { getCollection } from 'astro:content';
 import Base from '../../../layouts/Base.astro';
 import FormattedDate from '../../../components/FormattedDate.astro';
 
 export async function getStaticPaths() {
-  const entries = await getCollection('tools', ({ data }) => data.draft !== true && data.app === true);
+  const entries = await getCollection('products', ({ data }) => data.draft !== true && data.app === true);
   return entries.map((entry) => ({
     params: { slug: entry.slug },
     props: { entry },
@@ -17,22 +17,21 @@ const { entry } = Astro.props;
 const { data } = entry;
 
 // 根据 slug 决定渲染哪个交互组件
-const TOOL_COMPONENTS: Record<string, string> = {
-  'markdown-to-html': 'MarkdownConverter',
-  'color-picker': 'ColorPalette',
+const COMPONENT_MAP: Record<string, string> = {
+  'focus-timer': 'FocusTimer',
 };
-const component = TOOL_COMPONENTS[entry.slug];
+const component = COMPONENT_MAP[entry.slug];
 if (!component) {
-  return Astro.redirect(`/tools/${entry.slug}`);
+  return Astro.redirect(`/products/${entry.slug}`);
 }
 
-const ToolComponent = (await import(`../../../components/tools/${component}.astro`)).default;
+const Interactive = (await import(`../../../components/products/${component}.astro`)).default;
 ---
 
-<Base title={`${data.title} — 工具`} description={data.description}>
+<Base title={`${data.title} — 产品`} description={data.description}>
   <div class="container container-wide">
     <header class="tool-app-header">
-      <a href="/tools" class="link-underline muted">← 返回工具</a>
+      <a href="/products" class="link-underline muted">← 返回产品</a>
       <h1>{data.title}</h1>
       {data.description && <p class="lead">{data.description}</p>}
       <div class="tool-meta">
@@ -44,7 +43,7 @@ const ToolComponent = (await import(`../../../components/tools/${component}.astr
     </header>
 
     <main class="tool-app-body">
-      <ToolComponent />
+      <Interactive />
     </main>
   </div>
 </Base>

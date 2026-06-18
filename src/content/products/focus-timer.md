@@ -4,8 +4,7 @@ description: '一个基于番茄工作法的极简专注计时器，帮你对抗
 date: 2026-05-20
 tags: ['生产力']
 status: 'live'
-url: 'https://example.com/focus'
-repo: 'https://github.com/'
+app: true
 ---
 
 Focus 是一个没有任何多余功能的计时器：25 分钟专注，5 分钟休息，循环往复。
