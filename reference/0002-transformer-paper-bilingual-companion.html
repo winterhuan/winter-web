@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transformer 英文论文伴读</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <p class="eyebrow">Reference 0002</p>
+        <h1>Transformer 英文论文伴读</h1>
+        <p class="lede">
+          目标不是把论文逐字翻译成中文，而是让你能独立读懂关键句，并把它改写成适合博客的解释。
+        </p>
+
+        <div class="source-list">
+          <strong>配合阅读：</strong>
+          <a href="https://arxiv.org/abs/1706.03762">《Attention Is All You Need》</a>
+          的 Abstract 和 Introduction。先看本页，再回到原文。
+        </div>
+
+        <h2>四步读法</h2>
+        <ol>
+          <li><strong>先找主干：</strong>谁做了什么，不急着翻每个修饰词。</li>
+          <li><strong>圈术语块：</strong>sequence transduction、recurrent、convolutional、attention mechanism 这类词整块理解。</li>
+          <li><strong>转成工程问题：</strong>旧方法哪里慢、哪里难并行、哪里不适合长距离依赖。</li>
+          <li><strong>改成博客句：</strong>用中文讲给工程读者听，不追求论文腔。</li>
+        </ol>
+
+        <h2>Abstract 第一层：论文在反对什么</h2>
+        <p>
+          原文开头的大意是：当时最强的序列到序列模型，主要依赖复杂的 RNN 或 CNN，并且通常还会接 attention。
+        </p>
+
+        <div class="diagram" aria-label="英文术语块到中文理解">
+          <div class="box">
+            <strong>dominant models</strong>
+            当时主流、效果最好的模型。这里不是泛指所有模型。
+          </div>
+          <div class="box">
+            <strong>sequence transduction</strong>
+            输入一个序列，输出另一个序列。机器翻译是典型例子。
+          </div>
+          <div class="box">
+            <strong>recurrent or convolutional</strong>
+            论文要替换掉的旧架构路线：一步步读，或局部窗口扫。
+          </div>
+        </div>
+
+        <p class="note">
+          博客化表达：过去做机器翻译，主流路线是用 RNN 或 CNN 处理序列，再用 attention 帮模型对齐输入和输出。Transformer 的出发点，是问一个更激进的问题：这些旧结构能不能都不要？
+        </p>
+
+        <h2>Abstract 第二层：论文提出什么</h2>
+        <p>
+          论文的核心主张可以压成一句话：Transformer 是一个只基于 attention 的新架构，完全去掉 recurrence 和 convolution。
+        </p>
+
+        <div class="diagram" aria-label="Transformer 核心主张拆解">
+          <div class="box">
+            <strong>new simple architecture</strong>
+            不是加一个小模块，而是换掉整体架构。
+          </div>
+          <div class="box">
+            <strong>based solely on attention</strong>
+            只靠 attention 做序列内部的信息混合。
+          </div>
+          <div class="box">
+            <strong>dispensing with</strong>
+            抛弃、去掉。这是 Abstract 里的强动作。
+          </div>
+        </div>
+
+        <p class="note">
+          博客化表达：Transformer 的大胆之处不是“用了 attention”，而是把 attention 从辅助模块提升为主干结构。
+        </p>
+
+        <h2>最小英文词表</h2>
+        <ul>
+          <li><strong>dominant：</strong>主流的、占优势的。</li>
+          <li><strong>transduction：</strong>转换；在这里是序列到序列的转换。</li>
+          <li><strong>configuration：</strong>配置、结构组合。</li>
+          <li><strong>mechanism：</strong>机制，通常指一个可复用的计算模块。</li>
+          <li><strong>solely：</strong>仅仅、只靠。</li>
+          <li><strong>dispense with：</strong>去掉、摆脱。</li>
+        </ul>
+
+        <h2>练习</h2>
+        <div class="practice">
+          <p>不看上面内容，把这句话补完整：</p>
+          <p><code>Transformer 的核心贡献不是 _____，而是 _____。</code></p>
+          <p>
+            建议答案：不是“第一次使用 attention”，而是“只用 attention 替代 RNN/CNN 这类旧主干结构”。
+          </p>
+        </div>
+
+        <h2>下一步</h2>
+        <p>
+          回到原论文 Abstract，只读前两句。不要查每个单词；先标出主干和术语块。读完后，问我：“检查我对 Abstract 前两句的理解。”
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

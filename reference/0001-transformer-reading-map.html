@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transformer 读论文速查</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <p class="eyebrow">Reference 0001</p>
+        <h1>Transformer 读论文速查</h1>
+        <p class="lede">
+          读《Attention Is All You Need》时，不要先陷进所有公式。先抓住论文的主张、替换掉的旧机制，以及新架构带来的工程收益。
+          如果英文原文读起来吃力，先用
+          <a href="./0002-transformer-paper-bilingual-companion.html">Transformer 英文论文伴读</a>
+          拆句，再回到原文。
+        </p>
+
+        <h2>前置词汇</h2>
+        <ul>
+          <li><strong>sequence transduction：</strong>把一个序列转换成另一个序列，例如机器翻译、语音识别、摘要生成。</li>
+          <li><strong>recurrence：</strong>循环结构，典型代表是 RNN/LSTM/GRU；它按顺序一步步读 token。</li>
+          <li><strong>convolution：</strong>卷积结构，典型代表是 CNN；它用局部窗口扫描序列。</li>
+        </ul>
+
+        <h2>一页读法</h2>
+        <ol>
+          <li><strong>问题：</strong>机器翻译这类 sequence transduction 任务，以前主要靠 RNN/CNN 加 attention。</li>
+          <li><strong>主张：</strong>Transformer 只用 attention，去掉 recurrence 和 convolution。</li>
+          <li><strong>关键机制：</strong>self-attention 让序列中每个 token 直接读取其他 token 的信息。</li>
+          <li><strong>工程收益：</strong>路径更短、并行性更好，更适合大规模训练。</li>
+          <li><strong>代价：</strong>需要 positional encoding 表达顺序，attention 的计算量随序列长度增长较快。</li>
+        </ol>
+
+        <h2>优先读这些章节</h2>
+        <ul>
+          <li><code>Abstract</code>: 论文的一句话贡献。</li>
+          <li><code>Introduction</code>: 为什么要摆脱 recurrence。</li>
+          <li><code>3 Model Architecture</code>: encoder、decoder、attention、feed-forward、positional encoding。</li>
+          <li><code>3.2 Attention</code>: scaled dot-product attention 和 multi-head attention。</li>
+          <li><code>4 Why Self-Attention</code>: 为什么 self-attention 值得替代旧结构。</li>
+        </ul>
+
+        <h2>博客写作骨架</h2>
+        <ol>
+          <li>旧世界：RNN 逐步读序列，长距离依赖和并行训练都不舒服。</li>
+          <li>新问题：能不能让每个 token 一次性“看见”相关 token？</li>
+          <li>核心答案：self-attention 用 query/key/value 计算信息路由。</li>
+          <li>架构组合：attention 负责混合上下文，feed-forward 负责逐位置变换，positional encoding 补顺序。</li>
+          <li>产品含义：LLM 的能力来自大规模模式建模，不等于可靠规划、长期记忆或真实工具执行。</li>
+        </ol>
+
+        <div class="source-list">
+          <strong>主要来源：</strong>
+          <a href="https://arxiv.org/abs/1706.03762">Vaswani et al., Attention Is All You Need</a>,
+          <a href="https://jalammar.github.io/illustrated-transformer/">Jay Alammar, The Illustrated Transformer</a>,
+          <a href="https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1244/slides/cs224n-2024-lecture08-transformers.pdf">Stanford CS224N Lecture 8</a>
+        </div>
+      </article>
+    </main>
+  </body>
+</html>

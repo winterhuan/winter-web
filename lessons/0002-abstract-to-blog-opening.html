@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 0002: 把 Abstract 改写成博客开头</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <p class="eyebrow">Lesson 0002</p>
+        <h1>把 Abstract 改写成博客开头</h1>
+        <p class="lede">
+          这一课只练一个技能：把论文的前两句，从“正确翻译”改造成“工程读者愿意继续读”的博客开头。
+        </p>
+
+        <div class="source-list">
+          <strong>本课主源：</strong>
+          <a href="https://arxiv.org/abs/1706.03762">《Attention Is All You Need》</a>
+          的 Abstract 前两句。可先看
+          <a href="../reference/0002-transformer-paper-bilingual-companion.html">Transformer 英文论文伴读</a>。
+        </div>
+
+        <h2>先分清两种产物</h2>
+        <div class="diagram" aria-label="翻译和博客开头的区别">
+          <div class="box">
+            <strong>论文翻译</strong>
+            尽量贴近原句结构，保留术语和限定词。
+          </div>
+          <div class="box">
+            <strong>理解笔记</strong>
+            把两句话压成“旧方法是什么，新方法改了什么”。
+          </div>
+          <div class="box">
+            <strong>博客开头</strong>
+            先告诉读者为什么这件事值得关心，再引出 Transformer。
+          </div>
+        </div>
+
+        <h2>从原文到博客的三步</h2>
+        <ol>
+          <li><strong>抽旧世界：</strong>RNN/CNN encoder-decoder 是主流，attention 通常是辅助连接。</li>
+          <li><strong>抽矛盾：</strong>如果 attention 已经这么有用，能不能直接让它做主干？</li>
+          <li><strong>抽新主张：</strong>Transformer 把 attention 从辅助模块提升为整个架构的核心。</li>
+        </ol>
+
+        <h2>一个可用开头</h2>
+        <p>
+          在 Transformer 之前，机器翻译这类序列到序列任务，主流做法是用 RNN 或 CNN 搭一个编码器-解码器模型；效果最好的版本，还会在编码器和解码器之间加入注意力机制。Transformer 的突破，是把 attention 从辅助模块提升为整个模型的主干。
+        </p>
+
+        <p class="note">
+          这段不是逐字翻译。它保留了论文的逻辑：旧主干是 RNN/CNN，attention 原本是连接模块，Transformer 的动作是把 attention 变成主干。
+        </p>
+
+        <h2>30 秒判断</h2>
+        <div class="practice">
+          <p>哪一句更适合作为工程博客开头？</p>
+          <div class="quiz-options">
+            <button type="button" data-answer="wrong">主流序列转换模型基于复杂的循环或卷积神经网络。</button>
+            <button type="button" data-answer="right">Transformer 的关键，不是用了 attention，而是让 attention 接管了模型主干。</button>
+            <button type="button" data-answer="wrong">最佳模型通过注意力机制连接编码器和解码器。</button>
+          </div>
+          <p class="feedback" id="feedback" aria-live="polite"></p>
+        </div>
+
+        <h2>检查点</h2>
+        <p>
+          这个博客开头已经可用。不要在这里重复写同一段；下一步应该解释为什么 attention 能接管模型主干。
+        </p>
+
+        <p>
+          进入
+          <a href="./0003-qkv-self-attention.html">Q/K/V：self-attention 的最小直觉</a>。
+        </p>
+      </article>
+    </main>
+
+    <script>
+      const feedback = document.querySelector("#feedback");
+      for (const button of document.querySelectorAll("button[data-answer]")) {
+        button.addEventListener("click", () => {
+          const isRight = button.dataset.answer === "right";
+          feedback.textContent = isRight
+            ? "正确。博客开头要抓矛盾和主张，而不是只搬运术语。"
+            : "再想一次。这句话更像翻译或笔记，还没有把论文主张打出来。";
+          feedback.className = `feedback ${isRight ? "good" : "bad"}`;
+        });
+      }
+    </script>
+  </body>
+</html>

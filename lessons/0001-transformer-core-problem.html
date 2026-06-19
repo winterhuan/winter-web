@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 0001: Transformer 解决的核心问题</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <article>
+        <p class="eyebrow">Lesson 0001</p>
+        <h1>Transformer 解决的核心问题</h1>
+        <p class="lede">
+          这一课只解决一个问题：为什么《Attention Is All You Need》会把“去掉 recurrence 和 convolution”当成核心贡献？
+        </p>
+
+        <div class="source-list">
+          <strong>本课主源：</strong>
+          <a href="https://arxiv.org/abs/1706.03762">《Attention Is All You Need》</a>。
+          辅助阅读：
+          <a href="https://jalammar.github.io/illustrated-transformer/">The Illustrated Transformer</a>
+          和
+          <a href="https://web.stanford.edu/class/archive/cs/cs224n/cs224n.1244/slides/cs224n-2024-lecture08-transformers.pdf">Stanford CS224N Lecture 8</a>。
+        </div>
+
+        <h2>读论文前的三个词</h2>
+        <p>
+          这篇论文的开头会连续出现几个旧 NLP 架构词。先把它们压成工程直觉，后面读 Abstract 和 Introduction 会轻很多。
+        </p>
+
+        <div class="diagram" aria-label="Transformer 论文前置术语">
+          <div class="box">
+            <strong>sequence transduction</strong>
+            把一个序列转换成另一个序列。比如英文句子转中文句子、语音转文字、文章转摘要。
+          </div>
+          <div class="box">
+            <strong>recurrence</strong>
+            循环结构。RNN/LSTM/GRU 这类模型按顺序一步步读 token，后一步依赖前一步的状态。
+          </div>
+          <div class="box">
+            <strong>convolution</strong>
+            卷积结构。CNN 用固定大小的局部窗口扫描序列，先抓局部模式，再靠堆层传播远距离信息。
+          </div>
+        </div>
+
+        <p class="note">
+          所以论文开头那句话可以翻译成：过去做“输入序列到输出序列”的主流模型，主要靠一步步读的 RNN，或局部窗口扫描的 CNN，再加上 attention。
+        </p>
+
+        <h2>先抓住论文的对手</h2>
+        <p>
+          原论文的第一句话就给了上下文：当时主流 sequence transduction 模型基于复杂的 recurrent 或 convolutional neural networks，通常再接 attention。Transformer 的主张不是“attention 很有用”这么宽泛，而是更激进：只用 attention，完全去掉 recurrence 和 convolution。
+        </p>
+
+        <div class="diagram" aria-label="从旧架构到 Transformer 的简化图">
+          <div class="box">
+            <strong>旧路径</strong>
+            RNN/CNN 负责混合序列信息，attention 作为补充。
+          </div>
+          <div class="box">
+            <strong>问题</strong>
+            长距离依赖路径长；训练并行性受限；结构复杂。
+          </div>
+          <div class="box">
+            <strong>新答案</strong>
+            self-attention 直接让 token 彼此读取信息。
+          </div>
+        </div>
+
+        <h2>一句话模型</h2>
+        <p>
+          你可以先把 self-attention 理解成一个信息路由机制：每个 token 发出一个 query，拿它去匹配其他 token 的 key，然后按匹配强度读取对应的 value。
+        </p>
+
+        <p>
+          这句话足够你读论文的前半部分：<code>query</code> 是“我在找什么”，<code>key</code> 是“我提供什么索引”，<code>value</code> 是“我真正贡献什么信息”。
+        </p>
+
+        <h2>为什么这对 Agent 产品也重要</h2>
+        <p>
+          Transformer 擅长从上下文中路由和组合信息，但这不等于它天然拥有可靠目标管理、长期记忆、工具执行或产品级纠错。做 Agent 时，模型是推理与语言接口；工具、状态、评估和边界条件仍然要由系统设计承担。
+        </p>
+
+        <div class="practice">
+          <h2>30 秒检索练习</h2>
+          <p>不看上文，选出最贴近本课核心的一句话。</p>
+          <div class="quiz-options">
+            <button type="button" data-answer="wrong">Transformer 主要贡献是让模型第一次可以使用 attention 机制。</button>
+            <button type="button" data-answer="right">Transformer 主要贡献是只用 attention 替代 recurrent 和 convolutional 结构。</button>
+            <button type="button" data-answer="wrong">Transformer 主要贡献是把语言模型直接变成能执行工具的 Agent。</button>
+          </div>
+          <p class="feedback" id="feedback" aria-live="polite"></p>
+        </div>
+
+        <h2>下一步</h2>
+        <p>
+          读
+          <a href="../reference/0001-transformer-reading-map.html">Transformer 读论文速查</a>
+          的“一页读法”。如果英文原文读起来吃力，先用
+          <a href="../reference/0002-transformer-paper-bilingual-companion.html">Transformer 英文论文伴读</a>
+          拆 Abstract 和 Introduction，再回到原论文。然后进入
+          <a href="./0002-abstract-to-blog-opening.html">把 Abstract 改写成博客开头</a>。
+        </p>
+
+        <p class="note">
+          如果任何术语卡住，直接问我。课程会按你的理解继续往下建，不需要一次读懂整篇论文。
+        </p>
+      </article>
+    </main>
+
+    <script>
+      const feedback = document.querySelector("#feedback");
+      for (const button of document.querySelectorAll("button[data-answer]")) {
+        button.addEventListener("click", () => {
+          const isRight = button.dataset.answer === "right";
+          feedback.textContent = isRight
+            ? "正确。注意关键词是“只用 attention 替代旧结构”。"
+            : "再想一次。这里考的是论文相对旧架构的核心主张。";
+          feedback.className = `feedback ${isRight ? "good" : "bad"}`;
+        });
+      }
+    </script>
+  </body>
+</html>
