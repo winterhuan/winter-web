@@ -20,6 +20,7 @@ const { data } = entry;
 const TOOL_COMPONENTS: Record<string, string> = {
   'markdown-to-html': 'MarkdownConverter',
   'color-picker': 'ColorPalette',
+  'pdf-to-office': 'PdfOfficeConverter',
 };
 const component = TOOL_COMPONENTS[entry.slug];
 if (!component) {

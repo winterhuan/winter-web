@@ -1,0 +1,694 @@
+---
+// PDF 转 Word / Excel —— 浏览器本地解析文本型 PDF，导出 docx / xlsx
+---
+<div class="pdf-tool">
+  <section class="pdf-drop" data-drop-zone>
+    <input id="pdf-file" class="pdf-file" type="file" accept="application/pdf,.pdf" data-file-input />
+    <label class="pdf-drop-label" for="pdf-file">
+      <span class="pdf-drop-title" data-file-title>选择 PDF 文件</span>
+      <span class="pdf-drop-meta" data-file-meta>支持文本型 PDF，文件只在浏览器本地处理</span>
+    </label>
+  </section>
+
+  <section class="pdf-workbench">
+    <div class="pdf-panel pdf-options">
+      <div class="panel-head">
+        <h2>导出</h2>
+        <span class="panel-status" data-status>等待文件</span>
+      </div>
+
+      <div class="option-grid">
+        <label class="option-row">
+          <span>目标格式</span>
+          <select data-export-mode>
+            <option value="both">Word + Excel</option>
+            <option value="word">Word</option>
+            <option value="excel">Excel</option>
+          </select>
+        </label>
+        <label class="option-row">
+          <span>Excel 表格识别</span>
+          <input type="checkbox" data-detect-tables checked />
+        </label>
+        <label class="option-row">
+          <span>Word 保留页码</span>
+          <input type="checkbox" data-include-pages checked />
+        </label>
+      </div>
+
+      <div class="action-row">
+        <button class="action primary" data-convert disabled>转换</button>
+        <button class="action ghost" data-clear disabled>清空</button>
+      </div>
+    </div>
+
+    <div class="pdf-panel pdf-summary">
+      <div class="panel-head">
+        <h2>结果</h2>
+      </div>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="summary-num" data-page-count>0</span>
+          <span class="summary-label">页</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-num" data-line-count>0</span>
+          <span class="summary-label">行</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-num" data-table-count>0</span>
+          <span class="summary-label">表格行</span>
+        </div>
+      </div>
+      <div class="downloads" data-downloads></div>
+    </div>
+  </section>
+
+  <section class="pdf-preview">
+    <div class="panel-head">
+      <h2>预览</h2>
+      <span class="panel-status" data-preview-status>未解析</span>
+    </div>
+    <div class="preview-body" data-preview>
+      <p>选择 PDF 后显示前几页文本。</p>
+    </div>
+  </section>
+</div>
+
+<style>
+  .pdf-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .pdf-drop {
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    transition: border-color var(--transition), background var(--transition);
+  }
+  .pdf-drop.is-dragging {
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface));
+  }
+  .pdf-file {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .pdf-drop-label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-8);
+    cursor: pointer;
+    text-align: center;
+  }
+  .pdf-drop-title {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  .pdf-drop-meta {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-mute);
+  }
+
+  .pdf-workbench {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+    gap: var(--space-4);
+  }
+  .pdf-panel,
+  .pdf-preview {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+  .pdf-panel {
+    padding: var(--space-4);
+  }
+  .panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .panel-head h2 {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .panel-status {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+  }
+
+  .option-grid {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .option-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    font-size: var(--font-size-sm);
+  }
+  .option-row span {
+    color: var(--color-text-soft);
+  }
+  .option-row select,
+  .option-row input[type="checkbox"] {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+  .option-row select {
+    min-width: 150px;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-sm);
+  }
+  .option-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+
+  .action-row {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+  }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: var(--space-2) var(--space-5);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius);
+    font-size: var(--font-size-sm);
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    cursor: pointer;
+    transition: opacity var(--transition), background var(--transition);
+  }
+  .action:hover { opacity: 0.86; }
+  .action:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  .action.ghost {
+    background: transparent;
+    color: var(--color-text);
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+  }
+  .summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+  }
+  .summary-num {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .summary-label {
+    margin-top: 2px;
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+  }
+  .downloads {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+  }
+  .downloads .action {
+    text-decoration: none;
+  }
+
+  .pdf-preview {
+    overflow: hidden;
+  }
+  .pdf-preview .panel-head {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+  }
+  .preview-body {
+    max-height: 420px;
+    overflow: auto;
+    padding: var(--space-4);
+    font-size: var(--font-size-sm);
+    line-height: 1.7;
+  }
+  .preview-body p {
+    margin: 0;
+  }
+  .preview-page + .preview-page {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+  }
+  .preview-title {
+    margin-bottom: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-mute);
+  }
+  .preview-line {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  @media (max-width: 760px) {
+    .pdf-workbench {
+      grid-template-columns: 1fr;
+    }
+    .pdf-drop-label {
+      padding: var(--space-6) var(--space-4);
+    }
+    .option-row {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .option-row select {
+      width: 100%;
+    }
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .action {
+      width: 100%;
+      padding-inline: var(--space-3);
+    }
+  }
+</style>
+
+<script>
+  type ExportMode = 'both' | 'word' | 'excel';
+  interface PdfLine {
+    page: number;
+    y: number;
+    text: string;
+    cells: string[];
+  }
+  interface ParsedPdf {
+    name: string;
+    pages: number;
+    lines: PdfLine[];
+    tableRows: PdfLine[];
+  }
+  interface GeneratedFile {
+    label: string;
+    filename: string;
+    blob: Blob;
+  }
+
+  const fileInput = document.querySelector('[data-file-input]') as HTMLInputElement;
+  const dropZone = document.querySelector('[data-drop-zone]') as HTMLElement;
+  const fileTitle = document.querySelector('[data-file-title]') as HTMLElement;
+  const fileMeta = document.querySelector('[data-file-meta]') as HTMLElement;
+  const statusEl = document.querySelector('[data-status]') as HTMLElement;
+  const previewStatusEl = document.querySelector('[data-preview-status]') as HTMLElement;
+  const previewEl = document.querySelector('[data-preview]') as HTMLElement;
+  const convertBtn = document.querySelector('[data-convert]') as HTMLButtonElement;
+  const clearBtn = document.querySelector('[data-clear]') as HTMLButtonElement;
+  const exportModeEl = document.querySelector('[data-export-mode]') as HTMLSelectElement;
+  const detectTablesEl = document.querySelector('[data-detect-tables]') as HTMLInputElement;
+  const includePagesEl = document.querySelector('[data-include-pages]') as HTMLInputElement;
+  const pageCountEl = document.querySelector('[data-page-count]') as HTMLElement;
+  const lineCountEl = document.querySelector('[data-line-count]') as HTMLElement;
+  const tableCountEl = document.querySelector('[data-table-count]') as HTMLElement;
+  const downloadsEl = document.querySelector('[data-downloads]') as HTMLElement;
+
+  let currentFile: File | null = null;
+  let parsed: ParsedPdf | null = null;
+  let pdfjsPromise: Promise<any> | null = null;
+  let downloadUrls: string[] = [];
+
+  async function loadPdfJs() {
+    if (!pdfjsPromise) {
+      pdfjsPromise = Promise.all([
+        import('pdfjs-dist'),
+        import('pdfjs-dist/build/pdf.worker.mjs?url'),
+      ]).then(([pdfjsLib, worker]) => {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
+        return pdfjsLib;
+      });
+    }
+    return pdfjsPromise;
+  }
+
+  function setStatus(text: string) {
+    statusEl.textContent = text;
+  }
+
+  function baseName(name: string) {
+    return name.replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'converted';
+  }
+
+  function clearDownloadUrls() {
+    downloadUrls.forEach((url) => URL.revokeObjectURL(url));
+    downloadUrls = [];
+  }
+
+  function renderDownloadLinks(files: GeneratedFile[]) {
+    clearDownloadUrls();
+    if (files.length === 0) {
+      downloadsEl.innerHTML = '';
+      return;
+    }
+
+    downloadsEl.innerHTML = '';
+    files.forEach((file) => {
+      const url = URL.createObjectURL(file.blob);
+      downloadUrls.push(url);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.filename;
+      a.className = 'action';
+      a.textContent = `下载 ${file.label}`;
+      downloadsEl.appendChild(a);
+    });
+  }
+
+  function downloadGeneratedFile(file: GeneratedFile) {
+    const url = URL.createObjectURL(file.blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function groupTextItems(items: any[], pageNumber: number): PdfLine[] {
+    const rows = items
+      .filter((item) => typeof item.str === 'string' && item.str.trim())
+      .map((item) => ({
+        text: item.str.trim(),
+        x: item.transform[4] as number,
+        y: item.transform[5] as number,
+      }))
+      .sort((a, b) => Math.abs(b.y - a.y) > 3 ? b.y - a.y : a.x - b.x);
+
+    const lines: Array<{ y: number; parts: Array<{ text: string; x: number }> }> = [];
+    rows.forEach((part) => {
+      const line = lines.find((candidate) => Math.abs(candidate.y - part.y) <= 3);
+      if (line) {
+        line.parts.push(part);
+        line.y = (line.y + part.y) / 2;
+      } else {
+        lines.push({ y: part.y, parts: [part] });
+      }
+    });
+
+    return lines.map((line) => {
+      const parts = line.parts.sort((a, b) => a.x - b.x);
+      const cells: string[] = [];
+      let current = '';
+      let prevX: number | null = null;
+      parts.forEach((part) => {
+        if (prevX != null && part.x - prevX > 42 && current.trim()) {
+          cells.push(current.trim());
+          current = part.text;
+        } else {
+          current += current ? ` ${part.text}` : part.text;
+        }
+        prevX = part.x;
+      });
+      if (current.trim()) cells.push(current.trim());
+      return {
+        page: pageNumber,
+        y: line.y,
+        text: cells.join(' '),
+        cells,
+      };
+    }).filter((line) => line.text);
+  }
+
+  async function parsePdf(file: File): Promise<ParsedPdf> {
+    const pdfjsLib = await loadPdfJs();
+    const data = await file.arrayBuffer();
+    const loadingTask = pdfjsLib.getDocument({ data });
+    const pdf = await loadingTask.promise;
+    const lines: PdfLine[] = [];
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      setStatus(`解析第 ${pageNumber} / ${pdf.numPages} 页`);
+      const page = await pdf.getPage(pageNumber);
+      const content = await page.getTextContent();
+      lines.push(...groupTextItems(content.items, pageNumber));
+    }
+
+    const tableRows = detectTablesEl.checked
+      ? lines.filter((line) => line.cells.length >= 2)
+      : [];
+
+    return {
+      name: file.name,
+      pages: pdf.numPages,
+      lines,
+      tableRows,
+    };
+  }
+
+  function renderPreview(result: ParsedPdf) {
+    pageCountEl.textContent = String(result.pages);
+    lineCountEl.textContent = String(result.lines.length);
+    tableCountEl.textContent = String(result.tableRows.length);
+    previewStatusEl.textContent = result.lines.length > 0 ? '已解析' : '无文本';
+
+    const pages = Array.from({ length: Math.min(result.pages, 4) }, (_, i) => i + 1);
+    previewEl.innerHTML = pages.map((page) => {
+      const lines = result.lines
+        .filter((line) => line.page === page)
+        .slice(0, 28)
+        .map((line) => `<div class="preview-line">${escapeHtml(line.text)}</div>`)
+        .join('');
+      return `<div class="preview-page"><div class="preview-title">第 ${page} 页</div>${lines || '<p>未提取到文本</p>'}</div>`;
+    }).join('');
+  }
+
+  function escapeHtml(value: string) {
+    return value.replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }[char]!));
+  }
+
+  function createWord(result: ParsedPdf, docx: any) {
+    const {
+      Document,
+      HeadingLevel,
+      Paragraph,
+      Table,
+      TableCell,
+      TableRow,
+      TextRun,
+      WidthType,
+    } = docx;
+    const children: any[] = [
+      new Paragraph({
+        text: baseName(result.name),
+        heading: HeadingLevel.TITLE,
+      }),
+    ];
+
+    let currentPage = 0;
+    result.lines.forEach((line) => {
+      if (includePagesEl.checked && line.page !== currentPage) {
+        currentPage = line.page;
+        children.push(new Paragraph({
+          text: `第 ${currentPage} 页`,
+          heading: HeadingLevel.HEADING_2,
+        }));
+      }
+      children.push(new Paragraph({
+        children: [new TextRun(line.text)],
+        spacing: { after: 120 },
+      }));
+    });
+
+    if (detectTablesEl.checked && result.tableRows.length > 0) {
+      children.push(new Paragraph({
+        text: '识别到的表格行',
+        heading: HeadingLevel.HEADING_2,
+      }));
+      children.push(new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: result.tableRows.slice(0, 200).map((line) => new TableRow({
+          children: line.cells.map((cell) => new TableCell({
+            children: [new Paragraph(cell)],
+          })),
+        })),
+      }));
+    }
+
+    return new Document({
+      sections: [{ children }],
+    });
+  }
+
+  async function exportWord(result: ParsedPdf): Promise<GeneratedFile> {
+    const docx = await import('docx');
+    const document = createWord(result, docx);
+    const blob = await docx.Packer.toBlob(document);
+    return {
+      label: 'Word',
+      filename: `${baseName(result.name)}.docx`,
+      blob,
+    };
+  }
+
+  async function exportExcel(result: ParsedPdf): Promise<GeneratedFile> {
+    const XLSX = await import('xlsx');
+    const workbook = XLSX.utils.book_new();
+    const textRows = result.lines.map((line, index) => ({
+      page: line.page,
+      line: index + 1,
+      text: line.text,
+    }));
+    const textSheet = XLSX.utils.json_to_sheet(textRows);
+    XLSX.utils.book_append_sheet(workbook, textSheet, 'Text');
+
+    const tableRows = result.tableRows.map((line) => {
+      const row: Record<string, string | number> = { page: line.page };
+      line.cells.forEach((cell, index) => {
+        row[`col_${index + 1}`] = cell;
+      });
+      return row;
+    });
+    const tableSheet = XLSX.utils.json_to_sheet(tableRows.length > 0 ? tableRows : [{ page: '', col_1: '' }]);
+    XLSX.utils.book_append_sheet(workbook, tableSheet, 'Tables');
+
+    const output = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    return {
+      label: 'Excel',
+      filename: `${baseName(result.name)}.xlsx`,
+      blob: new Blob([output], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      }),
+    };
+  }
+
+  async function handleFile(file: File) {
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setStatus('请选择 PDF');
+      return;
+    }
+    currentFile = file;
+    parsed = null;
+    renderDownloadLinks([]);
+    convertBtn.disabled = true;
+    clearBtn.disabled = false;
+    fileTitle.textContent = file.name;
+    fileMeta.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+    previewEl.innerHTML = '<p>正在解析...</p>';
+
+    try {
+      parsed = await parsePdf(file);
+      renderPreview(parsed);
+      convertBtn.disabled = parsed.lines.length === 0;
+      setStatus(parsed.lines.length === 0 ? '未提取到文本' : '可转换');
+    } catch (error) {
+      console.error(error);
+      setStatus('解析失败');
+      previewStatusEl.textContent = '失败';
+      previewEl.innerHTML = '<p>无法解析这个 PDF。</p>';
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (file) handleFile(file);
+  });
+
+  ['dragenter', 'dragover'].forEach((eventName) => {
+    dropZone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropZone.classList.add('is-dragging');
+    });
+  });
+  ['dragleave', 'drop'].forEach((eventName) => {
+    dropZone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropZone.classList.remove('is-dragging');
+    });
+  });
+  dropZone.addEventListener('drop', (event) => {
+    const file = event.dataTransfer?.files?.[0];
+    if (file) handleFile(file);
+  });
+
+  detectTablesEl.addEventListener('change', async () => {
+    if (currentFile) await handleFile(currentFile);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    currentFile = null;
+    parsed = null;
+    fileInput.value = '';
+    fileTitle.textContent = '选择 PDF 文件';
+    fileMeta.textContent = '支持文本型 PDF，文件只在浏览器本地处理';
+    pageCountEl.textContent = '0';
+    lineCountEl.textContent = '0';
+    tableCountEl.textContent = '0';
+    renderDownloadLinks([]);
+    previewEl.innerHTML = '<p>选择 PDF 后显示前几页文本。</p>';
+    previewStatusEl.textContent = '未解析';
+    setStatus('等待文件');
+    convertBtn.disabled = true;
+    clearBtn.disabled = true;
+  });
+
+  convertBtn.addEventListener('click', async () => {
+    if (!parsed) return;
+    const mode = exportModeEl.value as ExportMode;
+    convertBtn.disabled = true;
+    setStatus('生成文件');
+    try {
+      const files: GeneratedFile[] = [];
+      if (mode === 'word' || mode === 'both') files.push(await exportWord(parsed));
+      if (mode === 'excel' || mode === 'both') files.push(await exportExcel(parsed));
+      renderDownloadLinks(files);
+      files.forEach(downloadGeneratedFile);
+      setStatus('可下载');
+    } catch (error) {
+      console.error(error);
+      setStatus('导出失败');
+    } finally {
+      convertBtn.disabled = false;
+    }
+  });
+
+  window.addEventListener('pagehide', clearDownloadUrls);
+</script>
