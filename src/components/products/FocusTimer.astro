@@ -37,6 +37,15 @@
       <button class="btn ghost" data-action="reset" aria-label="重置（R）">↺ 重置</button>
     </div>
 
+    <div class="phase-review" data-review-panel hidden aria-live="polite">
+      <div class="review-title">本轮专注完成</div>
+      <div class="review-text">确认后计入番茄，并开始休息。</div>
+      <div class="review-actions">
+        <button class="btn primary" data-review-start-break>开始休息</button>
+        <button class="btn ghost" data-review-complete-task>任务已完成</button>
+      </div>
+    </div>
+
     <!-- 设置 + 环境音 行 -->
     <div class="focus-tools-row">
       <button class="tool-chip" data-open-settings aria-haspopup="dialog" aria-expanded="false">
@@ -67,11 +76,11 @@
     <!-- 任务清单 -->
     <div class="focus-section focus-tasks-card">
       <div class="section-head">
-        <h2 class="section-title">任务清单</h2>
+        <h2 class="section-title">待选任务</h2>
         <span class="section-count" data-task-count></span>
       </div>
       <form class="task-form" data-task-form>
-        <input class="task-input" data-task-input placeholder="当前要专注的任务…" aria-label="新任务标题" />
+        <input class="task-input" data-task-input placeholder="添加下一轮候选任务…" aria-label="新任务标题" />
         <button class="btn task-add" type="submit" aria-label="添加任务">添加</button>
       </form>
       <ul class="task-list" data-task-list aria-live="polite"></ul>
@@ -86,17 +95,17 @@
         <div class="stat">
           <span class="stat-icon" aria-hidden="true">🍅</span>
           <span class="stat-num" data-stat-today>0</span>
-          <span class="stat-label">今日</span>
+          <span class="stat-label">完成</span>
         </div>
         <div class="stat stat-divider" aria-hidden="true"></div>
         <div class="stat">
           <span class="stat-num" data-stat-week>0</span>
-          <span class="stat-label">本周</span>
+          <span class="stat-label">放弃</span>
         </div>
         <div class="stat stat-divider" aria-hidden="true"></div>
         <div class="stat">
           <span class="stat-num" data-stat-total>0h</span>
-          <span class="stat-label">累计</span>
+          <span class="stat-label">休息率</span>
         </div>
       </div>
       <div class="stats-chart-wrap">
@@ -113,23 +122,34 @@
       <h2>设置</h2>
       <button class="settings-close" data-close-settings aria-label="关闭设置">✕</button>
     </div>
-    <div class="settings-body">
+      <div class="settings-body">
+      <label class="setting-row">
+        <span class="setting-label">番茄节奏</span>
+        <span class="setting-control">
+          <select data-set-rhythm aria-label="番茄节奏">
+            <option value="classic">经典 25/5/15</option>
+            <option value="light">轻量 15/3/10</option>
+            <option value="deep">深度 50/10/25</option>
+            <option value="custom">自定义</option>
+          </select>
+        </span>
+      </label>
       <label class="setting-row">
         <span class="setting-label">专注时长</span>
         <span class="setting-control">
-          <input type="number" data-set-focus min="1" max="120" /> 分钟
+          <input type="number" data-set-focus min="15" max="50" /> 分钟
         </span>
       </label>
       <label class="setting-row">
         <span class="setting-label">短休息</span>
         <span class="setting-control">
-          <input type="number" data-set-short min="1" max="60" /> 分钟
+          <input type="number" data-set-short min="3" max="10" /> 分钟
         </span>
       </label>
       <label class="setting-row">
         <span class="setting-label">长休息</span>
         <span class="setting-control">
-          <input type="number" data-set-long min="1" max="60" /> 分钟
+          <input type="number" data-set-long min="10" max="30" /> 分钟
         </span>
       </label>
       <label class="setting-row">
@@ -142,6 +162,12 @@
         <span class="setting-label">提示音</span>
         <span class="setting-control">
           <input type="checkbox" data-set-sound />
+        </span>
+      </label>
+      <label class="setting-row setting-row--toggle">
+        <span class="setting-label">浏览器通知</span>
+        <span class="setting-control">
+          <input type="checkbox" data-set-notifications />
         </span>
       </label>
     </div>
@@ -399,6 +425,31 @@
     gap: var(--space-3);
     flex-wrap: wrap;
     justify-content: center;
+  }
+  .phase-review {
+    width: min(100%, 420px);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    background: var(--panel-bg);
+    text-align: center;
+  }
+  .phase-review[hidden] { display: none; }
+  .review-title {
+    font-weight: 700;
+    color: var(--focus-color);
+    margin-bottom: var(--space-1);
+  }
+  .review-text {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-mute);
+    margin-bottom: var(--space-3);
+  }
+  .review-actions {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+    flex-wrap: wrap;
   }
   .btn {
     display: inline-flex;
@@ -675,8 +726,17 @@
     color: var(--color-text-mute);
     white-space: nowrap;
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
   .focus-tool :global(.task-pomos .is-over) { color: var(--focus-color); }
+  .focus-tool :global(.task-inbox) {
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 1px 5px;
+    font-size: 0.62rem;
+  }
   .focus-tool :global(.task-actions) { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
   .focus-tool :global(.task-icon-btn) {
     background: none;
@@ -905,6 +965,8 @@
 <script>
   import {
     DEFAULT_SETTINGS, defaultTimerState, phaseDurationMs, nextPhase,
+    canStartPomodoro, completeRunningPhase, isActiveFocus, isLongPause,
+    normalizeSettings, normalizeTimerState, startPomodoroCycle,
     type TimerState, type Settings, type Phase,
   } from '../../lib/timer-engine';
   import { AudioKit } from '../../lib/audio';
@@ -912,6 +974,12 @@
   const PHASE_LABELS: Record<Phase, string> = {
     'idle': '准备开始', 'focus': '专注中',
     'short-break': '离开屏幕', 'long-break': '长休息',
+  };
+
+  const POMODORO_PRESETS: Record<string, Pick<Settings, 'focusMin' | 'shortBreakMin' | 'longBreakMin' | 'longBreakInterval'>> = {
+    classic: { focusMin: 25, shortBreakMin: 5, longBreakMin: 15, longBreakInterval: 4 },
+    light: { focusMin: 15, shortBreakMin: 3, longBreakMin: 10, longBreakInterval: 4 },
+    deep: { focusMin: 50, shortBreakMin: 10, longBreakMin: 25, longBreakInterval: 2 },
   };
 
   const RING_CIRCUMFERENCE = 565.486; // 2*π*90
@@ -927,11 +995,19 @@
     catch (e) { showToast('本地存储已满，数据仅本次会话保留'); return false; }
   }
   function loadSettings(): Settings {
-    try { const r = localStorage.getItem(SETTINGS_KEY); if (r) return { ...DEFAULT_SETTINGS, ...JSON.parse(r) }; } catch (e) {}
-    return { ...DEFAULT_SETTINGS };
+    try { const r = localStorage.getItem(SETTINGS_KEY); if (r) return normalizeSettings(JSON.parse(r)); } catch (e) {}
+    return normalizeSettings(DEFAULT_SETTINGS);
   }
   function loadState(): TimerState {
-    try { const r = localStorage.getItem(STATE_KEY); if (r) return { ...defaultTimerState(), ...JSON.parse(r) }; } catch (e) {}
+    try {
+      const r = localStorage.getItem(STATE_KEY);
+      if (r) {
+        const next = normalizeTimerState(JSON.parse(r));
+        if (next.status === 'idle' && next.endTime != null) next.status = 'running';
+        else if (next.status === 'idle' && next.pausedRemaining != null) next.status = 'paused';
+        return next;
+      }
+    } catch (e) {}
     return defaultTimerState();
   }
 
@@ -950,6 +1026,9 @@
   const currentTaskKickerEl = document.querySelector('[data-current-task-kicker]') as HTMLElement;
   const currentTaskTitleEl = document.querySelector('[data-current-task-title]') as HTMLElement;
   const currentTaskMetaEl = document.querySelector('[data-current-task-meta]') as HTMLElement;
+  const reviewPanelEl = document.querySelector('[data-review-panel]') as HTMLElement;
+  const reviewStartBreakBtn = document.querySelector('[data-review-start-break]') as HTMLButtonElement;
+  const reviewCompleteTaskBtn = document.querySelector('[data-review-complete-task]') as HTMLButtonElement;
 
   const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   toolEl.dataset.reducedMotion = String(REDUCED_MOTION);
@@ -960,15 +1039,23 @@
   let currentTaskSummaryKey = '';
   const audio = new AudioKit();
 
+  function persistState() {
+    safeSet(STATE_KEY, JSON.stringify(state));
+  }
+
+  function isFocusCommitted(): boolean {
+    return state.phase === 'focus' && (state.status === 'running' || state.status === 'wrap-up' || state.status === 'paused');
+  }
+
   function syncAmbientPlayback(mode = settings.ambient) {
-    const shouldPlay = state.endTime != null && state.phase === 'focus';
+    const shouldPlay = state.endTime != null && state.phase === 'focus' && state.status !== 'wrap-up';
     audio.setAmbient(shouldPlay ? mode : 'none');
   }
 
   // 应用阶段时长变化后，需重新计算 endTime
   function applySettings(next: Settings) {
     const prev = settings;
-    settings = next;
+    settings = normalizeSettings(next);
     safeSet(SETTINGS_KEY, JSON.stringify(settings));
     // 若暂停中且当前阶段时长变了，用新时长重置剩余
     if (state.phase !== 'idle' && state.endTime == null && state.pausedRemaining != null) {
@@ -1008,17 +1095,23 @@
     if (toolEl) toolEl.dataset.phase = state.phase;
     const running = state.endTime != null;
     toolEl.dataset.running = String(running);
+    toolEl.dataset.status = state.status;
     startBtn.hidden = running;
     pauseBtn.hidden = !running;
-    startBtn.textContent = state.phase === 'focus' ? '▶ 继续专注'
-      : state.phase === 'short-break' || state.phase === 'long-break' ? '▶ 继续休息'
-        : '▶ 开始专注';
+    skipBtn.hidden = state.phase === 'idle' || state.status === 'awaiting-review' || state.status === 'awaiting-next-cycle';
+    if (reviewPanelEl) reviewPanelEl.hidden = state.status !== 'awaiting-review';
+    startBtn.textContent = state.status === 'awaiting-review' ? '▶ 开始休息'
+      : state.status === 'awaiting-next-cycle' ? '▶ 开始下一轮'
+        : state.status === 'paused' ? '▶ 继续这轮'
+          : state.phase === 'short-break' || state.phase === 'long-break' ? '▶ 继续休息'
+            : '▶ 开始本轮';
     pauseBtn.textContent = state.phase === 'focus' ? '⏸ 暂停'
       : state.phase === 'short-break' || state.phase === 'long-break' ? '⏸ 暂停休息'
         : '⏸ 暂停';
-    skipBtn.textContent = state.phase === 'focus' ? '⏭ 结束本轮'
+    skipBtn.textContent = state.phase === 'focus' ? '放弃本轮'
       : state.phase === 'short-break' || state.phase === 'long-break' ? '⏭ 跳过休息'
         : '⏭ 跳过';
+    taskInput.placeholder = isFocusCommitted() ? '记下分心，稍后处理...' : '添加下一轮候选任务...';
     renderCurrentTaskSummary();
     // 标签页标题（项8：完成后提示「时间到」）
     if (rem === 0 && state.phase !== 'idle') document.title = '⏰ 时间到 · Focus';
@@ -1058,12 +1151,50 @@
     setTimeout(() => { phaseHintEl.hidden = true; }, 2400);
   }
 
+  function requestFocusTask(): boolean {
+    if (canStartPomodoro(state)) return true;
+    taskInput.focus();
+    showToast('先选择或添加本轮任务');
+    return false;
+  }
+
+  function notifyPhaseDone(text: string) {
+    if (!settings.notificationsOn || !('Notification' in window) || Notification.permission !== 'granted') return;
+    new Notification('Focus', { body: text });
+  }
+
   function start() {
     audio.ensureContext();
-    if (state.phase === 'idle') state.phase = 'focus';
-    state.endTime = Date.now() + remainingMs();
+    if (state.status === 'awaiting-review') {
+      startProtectedBreak();
+      return;
+    }
+    if (state.status === 'paused') {
+      if (state.phase === 'focus' && isLongPause(state) && !window.confirm('暂停已超过 2 分钟。继续这轮？取消将放弃本轮。')) {
+        abandonPomodoro();
+        return;
+      }
+      state.status = 'running';
+      state.endTime = Date.now() + remainingMs();
+      state.pausedRemaining = null;
+      state.pauseStartedAt = null;
+      persistState();
+      render(); renderDots();
+      syncAmbientPlayback();
+      loop();
+      return;
+    }
+    if (state.status === 'awaiting-next-cycle' || state.phase === 'idle') {
+      if (!requestFocusTask()) return;
+      const next = startPomodoroCycle(state, settings);
+      if (!next) return;
+      state = next;
+    } else {
+      state.endTime = Date.now() + remainingMs();
+    }
     state.pausedRemaining = null;
-    safeSet(STATE_KEY, JSON.stringify(state));
+    state.pauseStartedAt = null;
+    persistState();
     render(); renderDots();
     syncAmbientPlayback();
     loop();
@@ -1072,37 +1203,86 @@
     if (state.endTime == null) return;
     state.pausedRemaining = state.endTime - Date.now();
     state.endTime = null;
-    safeSet(STATE_KEY, JSON.stringify(state));
+    state.status = 'paused';
+    state.pauseStartedAt = Date.now();
+    persistState();
     syncAmbientPlayback();
     render();
     stopLoop();
   }
 
+  function startProtectedBreak() {
+    const wasFocus = state.phase === 'focus';
+    if (!wasFocus || state.status !== 'awaiting-review') return;
+    state.completedFocus += 1;
+    recordFocusComplete();
+    recordFocusForTask();
+    const { phase } = nextPhase('focus', state.completedFocus - 1, settings);
+    state.phase = phase;
+    state.status = 'running';
+    state.endTime = Date.now() + phaseDurationMs(phase, settings);
+    state.pausedRemaining = null;
+    state.pauseStartedAt = null;
+    persistState();
+    syncAmbientPlayback();
+    showPhaseHint('开始休息，离开屏幕一下');
+    render(); renderDots();
+    loop();
+  }
+
   function completePhase() {
     stopLoop();
     const wasFocus = state.phase === 'focus';
-    if (wasFocus) {
-      state.completedFocus += 1;
-      recordFocusComplete();
-      recordFocusForTask();
-    }
-    const { phase } = nextPhase(state.phase, wasFocus ? state.completedFocus - 1 : state.completedFocus, settings);
-    state.phase = phase;
-    state.endTime = Date.now() + phaseDurationMs(phase, settings);
-    state.pausedRemaining = null;
-    safeSet(STATE_KEY, JSON.stringify(state));
+    if (!wasFocus) recordBreakComplete();
+    state = completeRunningPhase(state);
+    persistState();
     if (settings.soundOn) audio.playChime();
+    notifyPhaseDone(wasFocus ? '专注完成，确认后开始休息。' : '休息结束，选择下一轮任务。');
     syncAmbientPlayback();
     flashRing();
-    showPhaseHint(wasFocus ? '专注完成！去休息一下吧 🎉' : '休息结束，继续专注 💪');
+    showPhaseHint(wasFocus ? '专注完成，先确认本轮' : '休息结束，准备下一轮');
     render(); renderDots();
-    if (state.phase !== 'idle') loop();
   }
-  function skip() { if (state.phase !== 'idle') completePhase(); }
+  function abandonPomodoro(nextTaskId: string | null = null): boolean {
+    if (state.phase !== 'focus') return false;
+    if (!window.confirm('放弃本轮？本轮不会计入完成番茄。')) return false;
+    const tag = window.prompt('可选打断标签：内部分心 / 外部打断。留空跳过。')?.trim() ?? '';
+    stopLoop();
+    recordAbandonedPomodoro(tag);
+    state = {
+      ...state,
+      phase: 'idle',
+      status: 'idle',
+      endTime: null,
+      pausedRemaining: null,
+      pauseStartedAt: null,
+      currentTaskId: nextTaskId ?? state.currentTaskId,
+    };
+    persistState();
+    syncAmbientPlayback();
+    render(); renderDots(); renderTasks();
+    showToast('已放弃本轮，不计入统计');
+    return true;
+  }
+  function skipBreak() {
+    recordSkippedBreak();
+    state.status = 'awaiting-next-cycle';
+    state.endTime = null;
+    state.pausedRemaining = null;
+    state.pauseStartedAt = null;
+    persistState();
+    syncAmbientPlayback();
+    render(); renderDots(); renderStats();
+    showToast('已跳过休息，下一轮请先确认任务');
+  }
+  function skip() {
+    if (state.phase === 'focus') { abandonPomodoro(); return; }
+    if (state.phase === 'short-break' || state.phase === 'long-break') { skipBreak(); return; }
+  }
   function reset() {
     stopLoop();
     state = defaultTimerState();
-    safeSet(STATE_KEY, JSON.stringify(state));
+    persistState();
     syncAmbientPlayback();
     render(); renderDots();
   }
@@ -1146,46 +1326,83 @@
   });
 
   // ─── 统计 ───
-  interface DayStat { pomodoros: number; focusMs: number; }
+  interface DayStat { pomodoros: number; focusMs: number; abandoned: number; breaks: number; skippedBreaks: number; interruptions: Record<string, number>; }
   type Stats = Record<string, DayStat>;
-  function loadStats(): Stats { try { const r = localStorage.getItem(STATS_KEY); if (r) return JSON.parse(r); } catch (e) {} return {}; }
+  function emptyDayStat(): DayStat { return { pomodoros: 0, focusMs: 0, abandoned: 0, breaks: 0, skippedBreaks: 0, interruptions: {} }; }
+  function normalizeDayStat(d: Partial<DayStat> = {}): DayStat { return { ...emptyDayStat(), ...d, interruptions: d.interruptions ?? {} }; }
+  function loadStats(): Stats {
+    try {
+      const r = localStorage.getItem(STATS_KEY);
+      if (r) {
+        const raw = JSON.parse(r);
+        const next: Stats = {};
+        Object.entries(raw).forEach(([key, val]) => { next[key] = normalizeDayStat(val as Partial<DayStat>); });
+        return next;
+      }
+    } catch (e) {}
+    return {};
+  }
   function todayKey(d = new Date()): string { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-
-  function recordFocusComplete() {
+  function mutateToday(fn: (day: DayStat) => void) {
     const stats = loadStats();
     const key = todayKey();
-    const day = stats[key] || { pomodoros: 0, focusMs: 0 };
-    day.pomodoros += 1; day.focusMs += settings.focusMin * 60_000;
-    stats[key] = day; safeSet(STATS_KEY, JSON.stringify(stats));
+    const day = normalizeDayStat(stats[key]);
+    fn(day);
+    stats[key] = day;
+    safeSet(STATS_KEY, JSON.stringify(stats));
     renderStats();
+  }
+
+  function recordFocusComplete() {
+    mutateToday(day => {
+      day.pomodoros += 1;
+      day.focusMs += settings.focusMin * 60_000;
+    });
+  }
+  function recordAbandonedPomodoro(tag = '') {
+    mutateToday(day => {
+      day.abandoned += 1;
+      if (tag) day.interruptions[tag] = (day.interruptions[tag] ?? 0) + 1;
+    });
+  }
+  function recordBreakComplete() {
+    mutateToday(day => { day.breaks += 1; });
+  }
+  function recordSkippedBreak() {
+    mutateToday(day => { day.skippedBreaks += 1; });
   }
 
   function renderStats() {
     const stats = loadStats();
-    const today = stats[todayKey()]?.pomodoros || 0;
-    const days: { key: string; label: string; pomodoros: number; weekday: string }[] = [];
-    let weekTotal = 0, grandTotalMs = 0;
+    const today = normalizeDayStat(stats[todayKey()]);
+    const days: { key: string; label: string; pomodoros: number; abandoned: number; weekday: string }[] = [];
+    let weekAbandoned = 0, completedBreaks = 0, skippedBreaks = 0;
     const now = new Date();
     const weekdayNames = ['日','一','二','三','四','五','六'];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now); d.setDate(now.getDate() - i);
       const key = todayKey(d);
-      const p = stats[key]?.pomodoros || 0;
-      days.push({ key, label: String(d.getDate()), pomodoros: p, weekday: weekdayNames[d.getDay()] });
-      weekTotal += p;
+      const stat = normalizeDayStat(stats[key]);
+      const p = stat.pomodoros;
+      days.push({ key, label: String(d.getDate()), pomodoros: p, abandoned: stat.abandoned, weekday: weekdayNames[d.getDay()] });
+      weekAbandoned += stat.abandoned;
+      completedBreaks += stat.breaks;
+      skippedBreaks += stat.skippedBreaks;
     }
-    Object.values(stats).forEach(d => { grandTotalMs += d.focusMs; });
+    const breakTotal = completedBreaks + skippedBreaks;
+    const breakRate = breakTotal === 0 ? '100%' : `${Math.round(completedBreaks / breakTotal * 100)}%`;
     const setNum = (sel: string, val: string) => { const el = document.querySelector(sel); if (el) el.textContent = val; };
-    setNum('[data-stat-today]', String(today));
-    setNum('[data-stat-week]', String(weekTotal));
-    setNum('[data-stat-total]', `${(grandTotalMs / 3600000).toFixed(1)}h`);
+    setNum('[data-stat-today]', String(today.pomodoros));
+    setNum('[data-stat-week]', String(weekAbandoned));
+    setNum('[data-stat-total]', breakRate);
     const chartEl = document.querySelector('[data-stats-chart]');
     if (chartEl) {
-      const max = Math.max(1, ...days.map(d => d.pomodoros));
+      const max = Math.max(1, ...days.map(d => d.pomodoros + d.abandoned));
       chartEl.innerHTML = days.map((d, i) => {
         const h = Math.round(d.pomodoros / max * 58);
+        const abandonedText = d.abandoned > 0 ? `，放弃 ${d.abandoned}` : '';
         const active = i === days.length - 1 ? ' active' : '';
-        const title = `${d.weekday} ${d.label}日: ${d.pomodoros} 个番茄`;
+        const title = `${d.weekday} ${d.label}日: 完成 ${d.pomodoros}${abandonedText}`;
         return `<div class="chart-bar" title="${title}"><div class="chart-bar-fill${active}" style="height:${h}px"></div><div class="chart-bar-label">${d.label}</div></div>`;
       }).join('');
     }
@@ -1193,12 +1410,12 @@
   renderStats();
 
   // ─── 任务清单（项4：编辑/预估/删除确认）───
-  interface Task { id: string; title: string; pomodoros: number; estimate: number; done: boolean; createdAt: number; }
+  interface Task { id: string; title: string; pomodoros: number; estimate: number; done: boolean; inbox: boolean; createdAt: number; }
   function loadTasks(): Task[] {
     try { const r = localStorage.getItem(TASKS_KEY); if (r) {
       const arr = JSON.parse(r);
       // 迁移：老数据无 estimate 字段
-      return arr.map((t: any) => ({ ...t, estimate: t.estimate ?? 0 }));
+      return arr.map((t: any) => ({ ...t, estimate: t.estimate ?? 0, inbox: t.inbox ?? false }));
     } } catch (e) {}
     return [];
   }
@@ -1211,7 +1428,7 @@
 
   function renderCurrentTaskSummary(force = false) {
     if (!currentTaskCardEl || !currentTaskTitleEl || !currentTaskMetaEl || !currentTaskKickerEl) return;
-    const key = `${state.phase}|${state.endTime != null}|${state.currentTaskId ?? ''}|${state.completedFocus}`;
+    const key = `${state.phase}|${state.status}|${state.endTime != null}|${state.currentTaskId ?? ''}|${state.completedFocus}`;
     if (!force && key === currentTaskSummaryKey) return;
     currentTaskSummaryKey = key;
     const tasks = loadTasks();
@@ -1220,18 +1437,20 @@
     currentTaskCardEl.dataset.empty = String(!current);
 
     if (!current) {
-      currentTaskKickerEl.textContent = isBreak ? '休息中' : state.phase === 'focus' ? '本轮专注' : '当前任务';
+      currentTaskKickerEl.textContent = isBreak ? '休息中' : state.phase === 'focus' ? '本轮专注' : 'Focus Task';
       currentTaskTitleEl.textContent = '无任务';
-      currentTaskMetaEl.textContent = isBreak ? '下一轮再选择' : state.phase === 'focus' ? '自由专注' : '空闲';
+      currentTaskMetaEl.textContent = isBreak ? '下一轮再选择' : state.phase === 'focus' ? '先选择任务再开始' : '空闲';
       return;
     }
 
-    currentTaskKickerEl.textContent = isBreak ? '休息中' : state.phase === 'focus' ? '本轮专注' : '当前任务';
+    currentTaskKickerEl.textContent = isBreak ? '休息中' : state.phase === 'focus' ? '本轮专注' : 'Focus Task';
     currentTaskTitleEl.textContent = current.title;
     const progress = current.estimate > 0 ? `${current.pomodoros}/${current.estimate}` : String(current.pomodoros);
     currentTaskMetaEl.textContent = isBreak
       ? '下一轮继续'
-      : state.phase === 'focus'
+      : state.status === 'wrap-up'
+        ? `收尾中 · 番茄 ${progress}`
+        : state.phase === 'focus'
         ? `番茄 ${progress}`
         : `已完成 ${progress} 个番茄`;
   }
@@ -1255,13 +1474,15 @@
       const pomoText = t.estimate > 0
         ? `<span class="${t.pomodoros >= t.estimate ? 'is-over' : ''}">🍅 ${t.pomodoros}/${t.estimate}</span>`
         : (t.pomodoros > 0 ? `🍅 ${t.pomodoros}` : '');
+      const inboxText = t.inbox ? '<span class="task-inbox">稍后</span>' : '';
       return `
       <li class="task-item${t.id === state.currentTaskId ? ' is-focused' : ''}${t.done ? ' is-done' : ''}" data-task-id="${t.id}" draggable="true">
         <span class="drag-handle" aria-hidden="true">⋮⋮</span>
         <button class="task-checkbox" data-task-toggle="${t.id}" aria-label="${t.done ? '取消完成' : '完成任务'}"></button>
         <span class="task-title" data-task-title="${t.id}" title="双击编辑">${esc(t.title)}</span>
-        <span class="task-pomos">${pomoText}</span>
+        <span class="task-pomos">${inboxText}${pomoText}</span>
         <span class="task-actions">
+          <button class="task-icon-btn" data-task-estimate="${t.id}" aria-label="设置番茄预估" title="预估">#</button>
           <button class="task-icon-btn" data-task-edit="${t.id}" aria-label="编辑任务" title="编辑">✎</button>
           <button class="task-icon-btn task-delete" data-task-delete="${t.id}" aria-label="删除任务" title="删除">✕</button>
         </span>
@@ -1304,13 +1525,15 @@
     const title = taskInput.value.trim();
     if (!title) return;
     const tasks = loadTasks();
-    const next = { id: crypto.randomUUID(), title, pomodoros: 0, estimate: 0, done: false, createdAt: Date.now() };
+    const isDistraction = isFocusCommitted();
+    const next = { id: crypto.randomUUID(), title, pomodoros: 0, estimate: 0, done: false, inbox: isDistraction, createdAt: Date.now() };
     tasks.push(next);
-    if (!state.currentTaskId) {
+    if (!isDistraction && !state.currentTaskId) {
       state.currentTaskId = next.id;
-      safeSet(STATE_KEY, JSON.stringify(state));
+      persistState();
     }
     saveTasks(tasks); taskInput.value = ''; renderTasks(); render();
+    if (isDistraction) showToast('已记到稍后处理，不切换本轮任务');
   });
 
   // 删除确认（项4）
@@ -1344,14 +1567,42 @@
 
     if (t.closest('[data-task-delete]')) { askDelete(id); return; }
     if (t.closest('[data-task-edit]')) { startEditTask(id); return; }
+    if (t.closest('[data-task-estimate]')) {
+      const m = tasks.find(x => x.id === id);
+      if (m) {
+        const raw = window.prompt('预计需要几个番茄？留空或 0 表示不设置。', m.estimate > 0 ? String(m.estimate) : '');
+        if (raw !== null) {
+          m.estimate = Math.max(0, Math.min(12, Number(raw) || 0));
+          m.inbox = false;
+          saveTasks(tasks);
+          renderTasks();
+          render();
+        }
+      }
+      return;
+    }
     if (t.closest('[data-task-toggle]')) {
       const m = tasks.find(x => x.id === id);
-      if (m) { m.done = !m.done; saveTasks(tasks); }
+      if (m) {
+        m.done = !m.done;
+        if (m.done && id === state.currentTaskId && isFocusCommitted()) {
+          state.status = 'wrap-up';
+          persistState();
+          showToast('进入收尾模式，本轮计时继续');
+        }
+        saveTasks(tasks);
+      }
       renderTasks(); render(); return;
     }
-    // 点击任务主体 → 设为当前聚焦任务
+    if (isFocusCommitted() && id !== state.currentTaskId) {
+      abandonPomodoro(id);
+      return;
+    }
+    // 点击任务主体 → 设为下一轮 Focus Task
     state.currentTaskId = state.currentTaskId === id ? null : id;
-    safeSet(STATE_KEY, JSON.stringify(state)); renderTasks(); render();
+    const picked = tasks.find(x => x.id === state.currentTaskId);
+    if (picked) { picked.inbox = false; saveTasks(tasks); }
+    persistState(); renderTasks(); render();
   });
 
   // 双击标题编辑
@@ -1403,7 +1654,20 @@
     if (!state.currentTaskId) return;
     const tasks = loadTasks();
     const m = tasks.find(x => x.id === state.currentTaskId);
-    if (m) { m.pomodoros += 1; saveTasks(tasks); renderTasks(); }
+    if (m) { m.pomodoros += 1; m.inbox = false; saveTasks(tasks); renderTasks(); }
+  }
+  function completeCurrentTaskFromReview() {
+    if (!state.currentTaskId) return;
+    const tasks = loadTasks();
+    const m = tasks.find(x => x.id === state.currentTaskId);
+    if (m) {
+      m.done = true;
+      m.inbox = false;
+      saveTasks(tasks);
+      renderTasks();
+      render();
+      showToast('任务已标记完成');
+    }
   }
   renderTasks();
 
@@ -1411,18 +1675,28 @@
   const settingsOverlay = document.querySelector('[data-settings-overlay]') as HTMLElement;
   const settingsPanel = document.querySelector('[data-settings-panel]') as HTMLElement;
   const openSettingsBtn = document.querySelector('[data-open-settings]') as HTMLButtonElement;
+  const setRhythm = document.querySelector('[data-set-rhythm]') as HTMLSelectElement;
   const setFocus = document.querySelector('[data-set-focus]') as HTMLInputElement;
   const setShort = document.querySelector('[data-set-short]') as HTMLInputElement;
   const setLong = document.querySelector('[data-set-long]') as HTMLInputElement;
   const setIntervalInput = document.querySelector('[data-set-interval]') as HTMLInputElement;
   const setSound = document.querySelector('[data-set-sound]') as HTMLInputElement;
+  const setNotifications = document.querySelector('[data-set-notifications]') as HTMLInputElement;
 
   function syncSettingsInputs() {
+    const preset = Object.entries(POMODORO_PRESETS).find(([, p]) =>
+      p.focusMin === settings.focusMin &&
+      p.shortBreakMin === settings.shortBreakMin &&
+      p.longBreakMin === settings.longBreakMin &&
+      p.longBreakInterval === settings.longBreakInterval
+    );
+    setRhythm.value = preset?.[0] ?? 'custom';
     setFocus.value = String(settings.focusMin);
     setShort.value = String(settings.shortBreakMin);
     setLong.value = String(settings.longBreakMin);
     setIntervalInput.value = String(settings.longBreakInterval);
     setSound.checked = settings.soundOn;
+    setNotifications.checked = settings.notificationsOn;
   }
   function openSettings() {
     syncSettingsInputs();
@@ -1446,11 +1720,32 @@
       applySettings({ ...settings, [key]: v });
     });
   }
-  bindSetting(setFocus, 'focusMin', 1, 120);
-  bindSetting(setShort, 'shortBreakMin', 1, 60);
-  bindSetting(setLong, 'longBreakMin', 1, 60);
+  setRhythm.addEventListener('change', () => {
+    const preset = POMODORO_PRESETS[setRhythm.value];
+    if (!preset) return;
+    applySettings({ ...settings, ...preset });
+    syncSettingsInputs();
+  });
+  bindSetting(setFocus, 'focusMin', 15, 50);
+  bindSetting(setShort, 'shortBreakMin', 3, 10);
+  bindSetting(setLong, 'longBreakMin', 10, 30);
   bindSetting(setIntervalInput, 'longBreakInterval', 2, 12);
   setSound.addEventListener('change', () => applySettings({ ...settings, soundOn: setSound.checked }));
+  setNotifications.addEventListener('change', async () => {
+    if (setNotifications.checked && 'Notification' in window && Notification.permission === 'default') {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        setNotifications.checked = false;
+        showToast('浏览器通知未开启');
+      }
+    }
+    const enabled = setNotifications.checked && 'Notification' in window && Notification.permission === 'granted';
+    if (setNotifications.checked && !enabled) {
+      setNotifications.checked = false;
+      showToast('浏览器通知未开启');
+    }
+    applySettings({ ...settings, notificationsOn: enabled });
+  });
   document.querySelector('[data-reset-settings]')!.addEventListener('click', () => {
     applySettings({ ...DEFAULT_SETTINGS });
     syncSettingsInputs();
@@ -1491,5 +1786,11 @@
   pauseBtn.addEventListener('click', pause);
   skipBtn.addEventListener('click', skip);
   resetBtn.addEventListener('click', reset);
+  reviewStartBreakBtn.addEventListener('click', startProtectedBreak);
+  reviewCompleteTaskBtn.addEventListener('click', completeCurrentTaskFromReview);
   render(); renderDots();
+  if (state.endTime != null) {
+    if (Date.now() >= state.endTime) completePhase();
+    else loop();
+  }
 </script>

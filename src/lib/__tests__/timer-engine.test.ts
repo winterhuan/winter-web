@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
   DEFAULT_SETTINGS,
+  defaultTimerState,
+  canStartPomodoro,
+  completeRunningPhase,
+  normalizeSettings,
+  startPomodoroCycle,
   phaseDurationMs,
   nextPhase,
 } from '../timer-engine';
@@ -43,5 +48,69 @@ describe('nextPhase', () => {
     const r = nextPhase('long-break', 4, DEFAULT_SETTINGS);
     expect(r.phase).toBe('focus');
     expect(r.focusCompleted).toBe(false);
+  });
+});
+
+describe('Pomodoro workflow', () => {
+  it('requires a Focus Task before a Pomodoro Cycle can start', () => {
+    expect(canStartPomodoro(defaultTimerState())).toBe(false);
+    expect(canStartPomodoro({ ...defaultTimerState(), currentTaskId: 'task-1' })).toBe(true);
+  });
+
+  it('starts a Pomodoro Cycle with a full focus duration', () => {
+    const now = 1000;
+    const next = startPomodoroCycle({ ...defaultTimerState(), currentTaskId: 'task-1' }, DEFAULT_SETTINGS, now);
+
+    expect(next?.phase).toBe('focus');
+    expect(next?.status).toBe('running');
+    expect(next?.endTime).toBe(now + 25 * 60_000);
+  });
+
+  it('focus completion waits for Completion Review instead of auto-starting a break', () => {
+    const state = {
+      ...defaultTimerState(),
+      phase: 'focus' as const,
+      status: 'running' as const,
+      currentTaskId: 'task-1',
+      endTime: 1000,
+    };
+
+    const next = completeRunningPhase(state);
+
+    expect(next.status).toBe('awaiting-review');
+    expect(next.phase).toBe('focus');
+    expect(next.endTime).toBeNull();
+  });
+
+  it('break completion waits for Phase Confirmation before the next cycle', () => {
+    const state = {
+      ...defaultTimerState(),
+      phase: 'short-break' as const,
+      status: 'running' as const,
+      currentTaskId: 'task-1',
+      endTime: 1000,
+    };
+
+    const next = completeRunningPhase(state);
+
+    expect(next.status).toBe('awaiting-next-cycle');
+    expect(next.phase).toBe('short-break');
+    expect(next.endTime).toBeNull();
+  });
+});
+
+describe('normalizeSettings', () => {
+  it('keeps Pomodoro Rhythm settings inside bounded ranges', () => {
+    const s = normalizeSettings({
+      focusMin: 1,
+      shortBreakMin: 99,
+      longBreakMin: 1,
+      longBreakInterval: 99,
+    });
+
+    expect(s.focusMin).toBe(15);
+    expect(s.shortBreakMin).toBe(10);
+    expect(s.longBreakMin).toBe(10);
+    expect(s.longBreakInterval).toBe(12);
   });
 });
