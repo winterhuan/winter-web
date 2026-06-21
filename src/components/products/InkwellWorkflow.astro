@@ -1,0 +1,569 @@
+---
+// Inkwell 写作工作流 —— 从 Imported Draft 到 Publishable Markdown
+---
+<div class="inkwell-tool" data-inkwell>
+  <div class="inkwell-toolbar">
+    <div class="status-strip" aria-live="polite">
+      <span class="status-pill" data-readiness>待整理</span>
+      <span class="status-pill muted-pill" data-counts>0 字符 · 0 小节</span>
+    </div>
+    <div class="actions">
+      <button class="action" type="button" data-copy-export>复制 Markdown</button>
+      <button class="action ghost" type="button" data-reset>重置</button>
+    </div>
+  </div>
+
+  <div class="workflow-grid">
+    <section class="panel draft-panel" aria-labelledby="draft-label">
+      <div class="panel-head">
+        <h2 id="draft-label">Imported Draft</h2>
+      </div>
+      <textarea
+        class="draft-input"
+        data-draft
+        spellcheck="true"
+        placeholder="# 文章标题&#10;&#10;## 问题&#10;&#10;粘贴一篇已有 Markdown 草稿。"
+      ></textarea>
+    </section>
+
+    <section class="panel shape-panel" aria-labelledby="shape-label">
+      <div class="panel-head">
+        <h2 id="shape-label">Article Shape</h2>
+      </div>
+
+      <label class="field">
+        <span>Central Claim</span>
+        <input
+          type="text"
+          data-central-claim
+          placeholder="用一句话写清这篇文章的主张"
+        />
+      </label>
+
+      <label class="field">
+        <span>Target Reader Promise</span>
+        <input
+          type="text"
+          data-target-reader
+          placeholder="写给谁，读完能做什么或想明白什么"
+        />
+      </label>
+
+      <div class="section-list" data-sections></div>
+    </section>
+
+    <section class="panel export-panel" aria-labelledby="export-label">
+      <div class="panel-head">
+        <h2 id="export-label">Publishable Markdown</h2>
+      </div>
+
+      <div class="missing-list" data-missing></div>
+
+      <label class="field export-field">
+        <span>Export</span>
+        <textarea class="export-output" data-export readonly spellcheck="false"></textarea>
+      </label>
+    </section>
+  </div>
+</div>
+
+<style>
+  .inkwell-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-height: calc(100vh - 210px);
+  }
+  .inkwell-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+  .status-strip,
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text);
+    background: var(--color-surface);
+  }
+  .muted-pill {
+    border-color: var(--color-border);
+    color: var(--color-text-mute);
+  }
+  .action {
+    min-height: 36px;
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-size-sm);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius);
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    cursor: pointer;
+    transition: opacity var(--transition), transform var(--transition);
+  }
+  .action:hover { opacity: 0.85; }
+  .action:active { transform: translateY(1px); }
+  .action.ghost {
+    background: transparent;
+    color: var(--color-text);
+  }
+  .workflow-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(280px, 1.1fr) minmax(300px, 0.95fr) minmax(300px, 0.95fr);
+    gap: var(--space-4);
+    min-height: 0;
+  }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    overflow: hidden;
+  }
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 40px;
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .panel-head h2 {
+    font-size: var(--font-size-sm);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-mute);
+    letter-spacing: 0;
+  }
+  .draft-input,
+  .export-output {
+    flex: 1;
+    width: 100%;
+    min-height: 360px;
+    padding: var(--space-4);
+    border: 0;
+    outline: 0;
+    resize: none;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    line-height: 1.65;
+    color: var(--color-text);
+    background: transparent;
+  }
+  .shape-panel,
+  .export-panel {
+    gap: var(--space-4);
+    padding-bottom: var(--space-4);
+  }
+  .shape-panel .panel-head,
+  .export-panel .panel-head {
+    margin-bottom: 0;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-inline: var(--space-4);
+  }
+  .field span,
+  .missing-title,
+  .section-kicker {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-mono);
+    color: var(--color-text-mute);
+    text-transform: uppercase;
+  }
+  .field input,
+  .missing-body,
+  .role-select {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: var(--font-size-sm);
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .field input,
+  .role-select {
+    min-height: 38px;
+    padding: var(--space-2) var(--space-3);
+  }
+  .field input:focus,
+  .missing-body:focus,
+  .role-select:focus {
+    border-color: var(--color-border-strong);
+  }
+  .section-list,
+  .missing-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-inline: var(--space-4);
+    overflow-y: auto;
+  }
+  .section-list {
+    padding-bottom: var(--space-1);
+  }
+  .shape-section,
+  .missing-item {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    background: var(--color-bg);
+  }
+  .shape-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    gap: var(--space-3);
+    align-items: start;
+  }
+  .section-title {
+    margin-top: var(--space-1);
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  .section-preview {
+    margin-top: var(--space-2);
+    font-size: var(--font-size-xs);
+    line-height: 1.5;
+    color: var(--color-text-soft);
+    overflow-wrap: anywhere;
+  }
+  .empty-state {
+    padding: var(--space-6) var(--space-4);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius);
+    color: var(--color-text-mute);
+    font-size: var(--font-size-sm);
+  }
+  .missing-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .missing-row {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: var(--space-2);
+    align-items: start;
+  }
+  .missing-row input {
+    margin-top: 3px;
+  }
+  .missing-label {
+    font-size: var(--font-size-sm);
+    line-height: 1.45;
+    color: var(--color-text);
+  }
+  .missing-body {
+    min-height: 88px;
+    padding: var(--space-3);
+    resize: vertical;
+    font-family: var(--font-mono);
+    line-height: 1.55;
+  }
+  .export-field {
+    flex: 1;
+    min-height: 0;
+  }
+  .export-output {
+    min-height: 260px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+  }
+
+  @media (max-width: 1180px) {
+    .workflow-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .export-panel {
+      grid-column: 1 / -1;
+      min-height: 420px;
+    }
+  }
+  @media (max-width: 760px) {
+    .workflow-grid {
+      grid-template-columns: 1fr;
+    }
+    .inkwell-tool {
+      min-height: auto;
+    }
+    .draft-input,
+    .export-output {
+      min-height: 300px;
+    }
+    .shape-section {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  import {
+    buildPublishableMarkdown,
+    createArticleShape,
+    createMissingPieces,
+    SECTION_ROLE_OPTIONS,
+    type AcceptedAddition,
+    type ArticleShape,
+    type MissingPiece,
+    type SectionRole,
+  } from '../../lib/inkwell';
+
+  const STORAGE_KEY = 'inkwell-workflow-state';
+  const DEFAULT_DRAFT = `# 写作系统为什么会失效
+
+## 问题
+
+很多独立写作者并不是没有想法，而是草稿太多，每一篇都停在半成品状态。
+
+## 例子
+
+比如一篇产品复盘已经有背景、观察和几个片段，但作者不知道哪些段落应该留下。
+
+## 步骤
+
+先确认文章主张，再整理段落顺序，最后补齐读者真正需要的解释。`;
+
+  const draftInput = document.querySelector('[data-draft]') as HTMLTextAreaElement;
+  const centralClaimInput = document.querySelector('[data-central-claim]') as HTMLInputElement;
+  const targetReaderInput = document.querySelector('[data-target-reader]') as HTMLInputElement;
+  const sectionsEl = document.querySelector('[data-sections]') as HTMLElement;
+  const missingEl = document.querySelector('[data-missing]') as HTMLElement;
+  const exportEl = document.querySelector('[data-export]') as HTMLTextAreaElement;
+  const readinessEl = document.querySelector('[data-readiness]') as HTMLElement;
+  const countsEl = document.querySelector('[data-counts]') as HTMLElement;
+
+  let roleOverrides: Record<string, SectionRole> = {};
+  let resolved: Record<string, boolean> = {};
+  let additionBodies: Record<string, string> = {};
+
+  function loadState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+      draftInput.value = typeof saved.markdown === 'string' ? saved.markdown : DEFAULT_DRAFT;
+      centralClaimInput.value = typeof saved.centralClaim === 'string'
+        ? saved.centralClaim
+        : '持续输出型写作者需要先收束半成品草稿，而不是继续制造更多空白文档。';
+      targetReaderInput.value = typeof saved.targetReaderPromise === 'string'
+        ? saved.targetReaderPromise
+        : '写给有多篇草稿但发布很少的独立写作者，读完后能判断下一步该修哪一篇。';
+      roleOverrides = saved.roleOverrides ?? {};
+      resolved = saved.resolved ?? {};
+      additionBodies = saved.additionBodies ?? {};
+    } catch {
+      draftInput.value = DEFAULT_DRAFT;
+      centralClaimInput.value = '持续输出型写作者需要先收束半成品草稿，而不是继续制造更多空白文档。';
+      targetReaderInput.value = '写给有多篇草稿但发布很少的独立写作者，读完后能判断下一步该修哪一篇。';
+    }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        markdown: draftInput.value,
+        centralClaim: centralClaimInput.value,
+        targetReaderPromise: targetReaderInput.value,
+        roleOverrides,
+        resolved,
+        additionBodies,
+      }));
+    } catch {}
+  }
+
+  function getShape(): ArticleShape {
+    const shape = createArticleShape({
+      markdown: draftInput.value,
+      centralClaim: centralClaimInput.value,
+      targetReaderPromise: targetReaderInput.value,
+    });
+    shape.sections = shape.sections.map((section) => ({
+      ...section,
+      role: roleOverrides[section.id] ?? section.role,
+    }));
+    shape.missingPieces = createMissingPieces({
+      centralClaim: shape.centralClaim,
+      targetReaderPromise: shape.targetReaderPromise,
+    }, shape.sections);
+    return shape;
+  }
+
+  function renderSections(shape: ArticleShape) {
+    if (shape.sections.length === 0) {
+      sectionsEl.innerHTML = '<p class="empty-state">等待 Imported Draft。</p>';
+      return;
+    }
+
+    sectionsEl.innerHTML = shape.sections.map((section) => `
+      <article class="shape-section">
+        <div>
+          <div class="section-kicker">Section</div>
+          <div class="section-title">${escapeHtml(section.title)}</div>
+          <p class="section-preview">${escapeHtml(section.body.slice(0, 120) || '暂无正文')}</p>
+        </div>
+        <label>
+          <span class="section-kicker">Section Role</span>
+          <select class="role-select" data-role="${escapeHtml(section.id)}">
+            ${SECTION_ROLE_OPTIONS.map((option) => `
+              <option value="${option.value}" ${option.value === section.role ? 'selected' : ''}>${option.label}</option>
+            `).join('')}
+          </select>
+        </label>
+      </article>
+    `).join('');
+
+    sectionsEl.querySelectorAll<HTMLSelectElement>('[data-role]').forEach((select) => {
+      select.addEventListener('change', () => {
+        roleOverrides[select.dataset.role ?? ''] = select.value as SectionRole;
+        render();
+      });
+    });
+  }
+
+  function renderMissing(shape: ArticleShape) {
+    const missing = shape.missingPieces;
+    if (missing.length === 0) {
+      missingEl.innerHTML = '<p class="empty-state">没有发现必须补齐的结构缺口。</p>';
+      return;
+    }
+
+    missingEl.innerHTML = `
+      <div class="missing-title">Missing Pieces</div>
+      ${missing.map((piece) => renderMissingPiece(piece)).join('')}
+    `;
+
+    missingEl.querySelectorAll<HTMLInputElement>('[data-resolved]').forEach((input) => {
+      input.addEventListener('change', () => {
+        resolved[input.dataset.resolved ?? ''] = input.checked;
+        render();
+      });
+    });
+    missingEl.querySelectorAll<HTMLTextAreaElement>('[data-addition]').forEach((input) => {
+      input.addEventListener('input', () => {
+        additionBodies[input.dataset.addition ?? ''] = input.value;
+        renderExport(shape);
+        saveState();
+      });
+    });
+  }
+
+  function renderMissingPiece(piece: MissingPiece): string {
+    const checked = resolved[piece.id] ?? piece.resolved;
+    const body = additionBodies[piece.id] ?? '';
+    return `
+      <div class="missing-item">
+        <label class="missing-row">
+          <input type="checkbox" data-resolved="${escapeHtml(piece.id)}" ${checked ? 'checked' : ''} />
+          <span class="missing-label">${escapeHtml(piece.label)}</span>
+        </label>
+        <textarea
+          class="missing-body"
+          data-addition="${escapeHtml(piece.id)}"
+          placeholder="接受后会追加到导出的 Markdown"
+        >${escapeHtml(body)}</textarea>
+      </div>
+    `;
+  }
+
+  function getAcceptedAdditions(shape: ArticleShape): AcceptedAddition[] {
+    return shape.missingPieces
+      .filter((piece) => resolved[piece.id] && (additionBodies[piece.id] ?? '').trim())
+      .map((piece) => ({
+        heading: missingHeading(piece.kind),
+        body: additionBodies[piece.id],
+      }));
+  }
+
+  function missingHeading(kind: MissingPiece['kind']): string {
+    const labels: Record<MissingPiece['kind'], string> = {
+      'central-claim': '中心主张',
+      'target-reader': '目标读者',
+      example: '例子',
+      steps: '步骤',
+      closing: '结论',
+    };
+    return labels[kind];
+  }
+
+  function renderExport(shape: ArticleShape) {
+    exportEl.value = buildPublishableMarkdown(draftInput.value, getAcceptedAdditions(shape));
+  }
+
+  function render() {
+    const shape = getShape();
+    readinessEl.textContent = shape.ready ? '可进入修订' : '需要收束';
+    countsEl.textContent = `${shape.sections.length} 小节 · ${shape.missingPieces.length} 缺口`;
+    renderSections(shape);
+    renderMissing(shape);
+    renderExport(shape);
+    saveState();
+  }
+
+  function escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  [draftInput, centralClaimInput, targetReaderInput].forEach((input) => {
+    input.addEventListener('input', render);
+  });
+
+  document.querySelector('[data-copy-export]')?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(exportEl.value);
+      flash('[data-copy-export]', '已复制');
+    } catch {
+      flash('[data-copy-export]', '复制失败');
+    }
+  });
+
+  document.querySelector('[data-reset]')?.addEventListener('click', () => {
+    draftInput.value = DEFAULT_DRAFT;
+    centralClaimInput.value = '持续输出型写作者需要先收束半成品草稿，而不是继续制造更多空白文档。';
+    targetReaderInput.value = '写给有多篇草稿但发布很少的独立写作者，读完后能判断下一步该修哪一篇。';
+    roleOverrides = {};
+    resolved = {};
+    additionBodies = {};
+    render();
+  });
+
+  function flash(selector: string, text: string) {
+    const button = document.querySelector(selector) as HTMLButtonElement | null;
+    if (!button) return;
+    const original = button.textContent ?? '';
+    button.textContent = text;
+    window.setTimeout(() => {
+      button.textContent = original;
+    }, 1200);
+  }
+
+  loadState();
+  render();
+</script>

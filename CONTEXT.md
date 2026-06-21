@@ -8,6 +8,58 @@ This context describes product-facing concepts used by the website and its inter
 The site's Pomodoro-based focus timer product. Focus should act as a gentle but bounded Pomodoro coach, protecting the work-break cycle while staying lightweight.
 _Avoid_: Generic timer, task timer
 
+**Inkwell**:
+The site's writing workflow product for helping independent writers move an article from draft toward publication.
+_Avoid_: Blank product, generic writing app
+
+**Independent Writer**:
+A person who regularly publishes original articles under their own name or brand and needs help moving ideas into finished pieces.
+_Avoid_: Any writer, casual note-taker, document editor user
+
+**Article Draft**:
+A draft of a single article that an Independent Writer intends to publish. It may target different channels, but it is not a general note, knowledge-base page, fiction manuscript, or course document.
+_Avoid_: Document, note, writing project, workspace
+
+**Completion Workflow**:
+The Inkwell workflow for moving an existing Article Draft from half-finished material to a publishable piece.
+_Avoid_: Blank-page generation, idea generation, template library
+
+**Half-Finished Draft**:
+An Article Draft with a central claim and enough raw material to revise, organize, and complete. A title, prompt, or single loose idea is not enough to enter Inkwell's core workflow.
+_Avoid_: Idea, prompt, empty draft, title-only draft
+
+**Structure Pass**:
+The first step of the Completion Workflow, where a Half-Finished Draft is examined for its central claim, reader value, supporting sections, repetition, and missing pieces before more prose is written.
+_Avoid_: Freewriting, drafting more, outline template
+
+**Article Shape**:
+The editable structure produced by the Structure Pass. It captures the Article Draft's claim, intended reader value, section order, section roles, and missing pieces so the writer can revise the article directly.
+_Avoid_: Diagnostic report, advice list, generated outline
+
+**Target Reader Promise**:
+The lightweight Article Shape statement of who the Article Draft is for and what that reader should be able to do or understand after reading it.
+_Avoid_: Persona, audience profile, market segment
+
+**Central Claim**:
+The one-sentence claim an Article Draft is organized around. If it cannot be stated in one sentence, the draft needs narrowing before revision continues.
+_Avoid_: Topic, theme, keyword list, multiple angles
+
+**Section Role**:
+The purpose each section serves inside an Article Shape, such as framing the problem, explaining a concept, giving an example, addressing an objection, providing steps, or closing the argument.
+_Avoid_: Heading style, paragraph label, content type
+
+**Editorial Assistant**:
+Inkwell's AI role for helping an Independent Writer inspect structure, find gaps, suggest revisions, and prepare publication without taking over authorship.
+_Avoid_: Ghostwriter, content generator, auto-writer
+
+**Imported Draft**:
+A Markdown Article Draft pasted or imported into Inkwell so the Completion Workflow can begin from existing material instead of a blank in-app editor.
+_Avoid_: New document, synced workspace, source of truth
+
+**Publishable Markdown**:
+The Completion Workflow output: a revised Markdown Article Draft that the Independent Writer is ready to copy, export, or publish elsewhere.
+_Avoid_: Direct publishing, platform integration, synced final document
+
 **Pomodoro Cycle**:
 A committed focus interval followed by a real break. Only completed focus intervals count as Pomodoros.
 _Avoid_: Timer session, stopwatch run

@@ -19,6 +19,7 @@ const { data } = entry;
 // 根据 slug 决定渲染哪个交互组件
 const COMPONENT_MAP: Record<string, string> = {
   'focus-timer': 'FocusTimer',
+  'inkwell': 'InkwellWorkflow',
 };
 const component = COMPONENT_MAP[entry.slug];
 if (!component) {
