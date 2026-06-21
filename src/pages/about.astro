@@ -1,50 +1,225 @@
 ---
 import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
 import { AUTHOR, ABOUT, SOCIAL_LINKS } from '../consts';
 
 const externalSocial = SOCIAL_LINKS.filter((l) => !l.href.startsWith('/'));
 ---
-<Base title="关于" description={`关于 ${AUTHOR.name}`}>
-  <section class="section">
-    <div class="container container-narrow">
-      <header class="page-head">
+<Base title="关于" description={`${AUTHOR.name} 的个人介绍、正在做的事和联系方式`}>
+  <section class="about-hero">
+    <div class="container about-hero-inner">
+      <div class="about-copy">
+        <p class="eyebrow">关于</p>
         <h1>关于 {AUTHOR.name}</h1>
-        <p class="lead">{AUTHOR.bio}</p>
-      </header>
-
-      <div class="prose">
-        <h2>现在</h2>
-        <p>{ABOUT.now}</p>
-
-        <h2>感兴趣的方向</h2>
-        <ul class="interests">
-          {ABOUT.interests.map((item) => <li><span class="tag">{item}</span></li>)}
-        </ul>
-
-        <h2>联系</h2>
-        <p>
-          邮箱：<a href={`mailto:${ABOUT.email}`}>{ABOUT.email}</a><br />
-          {externalSocial.length > 0 && (
-            <>也可以在这些地方找到我：
-              {externalSocial.map((link, i) => (
-                <>{i > 0 && '、'}<a href={link.href} target="_blank" rel="noopener">{link.label}</a></>
-              ))}。</>
-          )}
-        </p>
+        <p class="lead">{AUTHOR.tagline}</p>
+        {ABOUT.intro.map((paragraph) => <p>{paragraph}</p>)}
+        <div class="hero-actions">
+          <a class="btn" href={`mailto:${ABOUT.email}`}>联系我</a>
+          <a class="btn btn-ghost" href="/products">查看产品</a>
+        </div>
       </div>
+
+      <aside class="profile-panel" aria-label="当前状态">
+        <div class="profile-mark">
+          <Logo size={56} />
+        </div>
+        <dl class="profile-facts">
+          <div>
+            <dt>现在</dt>
+            <dd>{ABOUT.now}</dd>
+          </div>
+          <div>
+            <dt>方向</dt>
+            <dd>写作、专注、开发者工具</dd>
+          </div>
+          <div>
+            <dt>更新</dt>
+            <dd>博客、工具和产品会持续放在这里</dd>
+          </div>
+        </dl>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container about-layout">
+      <div class="about-main">
+        <section class="about-section">
+          <h2>现在在做什么</h2>
+          <p>{ABOUT.now}</p>
+          <ul class="now-list">
+            {ABOUT.currentFocus.map((item) => <li>{item}</li>)}
+          </ul>
+        </section>
+
+        <section class="about-section">
+          <h2>这个站点放什么</h2>
+          <div class="focus-grid">
+            {ABOUT.focusAreas.map((area) => (
+              <a class="focus-card" href={area.href}>
+                <span>{area.title}</span>
+                <p>{area.description}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section class="about-section">
+          <h2>做事原则</h2>
+          <ol class="principles">
+            {ABOUT.principles.map((item) => <li>{item}</li>)}
+          </ol>
+        </section>
+      </div>
+
+      <aside class="about-side">
+        <section class="side-section">
+          <h2>感兴趣的方向</h2>
+          <ul class="interests">
+            {ABOUT.interests.map((item) => <li><span class="tag">{item}</span></li>)}
+          </ul>
+        </section>
+
+        <section class="side-section">
+          <h2>联系</h2>
+          <p>{ABOUT.contactNote}</p>
+          <a class="contact-link" href={`mailto:${ABOUT.email}`}>{ABOUT.email}</a>
+          {externalSocial.length > 0 && (
+            <div class="social-links" aria-label="社交链接">
+              {externalSocial.map((link) => (
+                <a href={link.href} target="_blank" rel="noopener">{link.label}</a>
+              ))}
+            </div>
+          )}
+        </section>
+      </aside>
     </div>
   </section>
 </Base>
 
 <style>
-  .page-head {
-    margin-bottom: var(--space-12);
-    padding-bottom: var(--space-8);
+  .about-hero {
+    padding-block: var(--space-24) var(--space-16);
     border-bottom: 1px solid var(--color-border);
   }
-  .page-head h1 {
-    font-size: var(--font-size-3xl);
+  .about-hero-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--space-12);
+    align-items: end;
+  }
+  .about-copy {
+    max-width: 68ch;
+  }
+  .eyebrow {
     margin-bottom: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-mute);
+  }
+  .about-copy h1 {
+    font-size: var(--font-size-4xl);
+    letter-spacing: 0;
+    line-height: 1;
+  }
+  .about-copy .lead {
+    margin-top: var(--space-4);
+    color: var(--color-text);
+  }
+  .about-copy p:not(.eyebrow, .lead) {
+    margin-top: var(--space-4);
+    max-width: 60ch;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+  }
+  .profile-panel {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    padding: var(--space-6);
+  }
+  .profile-mark {
+    margin-bottom: var(--space-8);
+  }
+  .profile-facts {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .profile-facts div {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .profile-facts dt {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-mute);
+  }
+  .profile-facts dd {
+    color: var(--color-text);
+  }
+  .about-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--space-12);
+    align-items: start;
+  }
+  .about-main,
+  .about-side {
+    display: grid;
+    gap: var(--space-12);
+  }
+  .about-section,
+  .side-section {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .about-section h2,
+  .side-section h2 {
+    font-size: var(--font-size-xl);
+    letter-spacing: 0;
+  }
+  .now-list,
+  .principles {
+    padding-left: var(--space-6);
+    color: var(--color-text);
+  }
+  .now-list li,
+  .principles li {
+    margin-top: var(--space-2);
+  }
+  .focus-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .focus-card {
+    display: grid;
+    gap: var(--space-3);
+    min-height: 180px;
+    padding: var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    transition: border-color var(--transition), transform var(--transition);
+  }
+  .focus-card:hover {
+    border-color: var(--color-border-strong);
+    transform: translateY(-2px);
+  }
+  .focus-card span {
+    font-weight: 700;
+    font-size: var(--font-size-lg);
+  }
+  .focus-card p {
+    font-size: var(--font-size-sm);
+  }
+  .side-section {
+    padding-bottom: var(--space-8);
+    border-bottom: 1px solid var(--color-border);
   }
   .interests {
     list-style: none;
@@ -52,5 +227,48 @@ const externalSocial = SOCIAL_LINKS.filter((l) => !l.href.startsWith('/'));
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
+  }
+  .contact-link {
+    width: fit-content;
+    color: var(--color-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .social-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+    font-size: var(--font-size-sm);
+  }
+  .social-links a {
+    color: var(--color-text-mute);
+    transition: color var(--transition);
+  }
+  .social-links a:hover {
+    color: var(--color-text);
+  }
+  @media (max-width: 900px) {
+    .about-hero-inner,
+    .about-layout {
+      grid-template-columns: 1fr;
+    }
+    .profile-panel {
+      max-width: 520px;
+    }
+    .focus-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 640px) {
+    .about-hero {
+      padding-block: var(--space-16) var(--space-12);
+    }
+    .about-copy h1 {
+      font-size: var(--font-size-3xl);
+    }
+    .section {
+      padding-block: var(--space-12);
+    }
   }
 </style>
