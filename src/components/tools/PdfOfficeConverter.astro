@@ -354,7 +354,8 @@
     if (!pdfjsPromise) {
       pdfjsPromise = Promise.all([
         import('pdfjs-dist'),
-        import('pdfjs-dist/build/pdf.worker.mjs?url'),
+        // 用压缩版 worker，体积约省一半（2.1MB → ~1.1MB）
+        import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
       ]).then(([pdfjsLib, worker]) => {
         pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
         return pdfjsLib;

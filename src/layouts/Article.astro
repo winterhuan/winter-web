@@ -5,6 +5,7 @@ import Base from './Base.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import TableOfContents from '../components/TableOfContents.astro';
 import { readingTime } from '../lib/reading-time';
+import { SITE_TITLE } from '../consts';
 
 interface Props {
   title: string;
@@ -41,8 +42,41 @@ const tagHref = (t: string) =>
 // TOC 只取 h2/h3，至少 3 个才显示
 const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 const showToc = tocHeadings.length >= 3;
+
+// 结构化数据：博客用 BlogPosting，工具/产品用 WebApplication
+const pageUrl = new URL(
+  Astro.url.pathname,
+  Astro.site ?? 'https://winter-web.pages.dev',
+).toString();
+const jsonld =
+  collection === 'blog'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: title,
+        ...(description ? { description } : {}),
+        ...(date
+          ? { datePublished: date.toISOString(), dateModified: date.toISOString() }
+          : {}),
+        ...(tags.length ? { keywords: tags.join(', ') } : {}),
+        author: { '@type': 'Person', name: SITE_TITLE },
+        url: pageUrl,
+        mainEntityOfPage: pageUrl,
+      }
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: title,
+        ...(description ? { description } : {}),
+        url: pageUrl,
+        applicationCategory:
+          collection === 'products' ? 'ProductivityApplication' : 'UtilitiesApplication',
+        operatingSystem: 'Web',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'CNY' },
+      };
 ---
 <Base title={title} description={description}>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonld)} />
   <article class="section">
     <div class="container">
       {backHref && (

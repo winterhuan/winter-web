@@ -1,0 +1,4 @@
+# pnpm 11 起依赖的构建脚本默认拦截，此处放行 esbuild/sharp（不做放行会导致 pnpm install 非零退出、构建失败）
+allowBuilds:
+  esbuild: true
+  sharp: true

@@ -59,5 +59,7 @@
     const next = currentIsDark ? 'light' : 'dark';
     root.dataset.theme = next;
     try { localStorage.setItem('theme', next); } catch (e) {}
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = next === 'dark' ? '#0a0a0a' : '#fafafa';
   });
 </script>
